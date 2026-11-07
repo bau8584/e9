@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeRealRanking, createInitial, sanitize } from '../store/progress';
-import { characterOfMission, fromRemoteProgress, mergeLibraries, newClaims, planProgress, toRemoteProgress, usableLibrary, type LibraryDoc } from './merge';
+import { characterOfMission, clampStamp, fromRemoteProgress, LIBRARY_MAX_BOOKS, libraryTooLarge, mergeLibraries, newClaims, nextRetryDelay, planProgress, RETRY_MAX, RETRY_MIN, runSteps, STAMP_MAX, toRemoteProgress, usableLibrary, type LibraryDoc } from './merge';
 
 const book = (id: string, updatedAt = '2026-11-01T00:00:00Z', memo = '') => ({ id, title: '책', author: '나', genre: '문학', finishedAt: '2026-11-01', quote: '', memo, color: '#73547e', createdAt: '2026-11-01T00:00:00Z', updatedAt });
 const lib = (nickname: string, books: ReturnType<typeof book>[]): LibraryDoc => ({ version: 1, nickname, books });
@@ -71,5 +71,61 @@ describe('깨진 단계 복구', () => {
     const p = sanitize({ version: 1, nickname: '덕구', favoriteId: 'nietzsche', screen: 'dm', stage: 'dm', dmChoiceId: 'nietzsche-a' });
     expect(p.stage).toBe('dm');
     expect(p.dmChoiceId).toBeNull();
+  });
+});
+
+describe('서버 규칙에 맞춰 올리기', () => {
+  it('옛 카드와 미션 id, 중복은 올릴 때만 빼고 기기 기록은 그대로 둔다', () => {
+    const local = { ...started, cards: ['card-old', 'card-nietzsche-rare', 'card-nietzsche-rare'], rewardedMissions: ['reading-old', 'reading-nietzsche-1'] };
+    const remote = toRemoteProgress(local);
+    expect(remote.cards).toEqual(['card-nietzsche-rare']);
+    expect(remote.rewardedMissions).toEqual(['reading-nietzsche-1']);
+    expect(local.cards).toHaveLength(3);
+  });
+  it('점수와 짧은 값도 규칙 범위로 맞춘다', () => {
+    const remote = toRemoteProgress({ ...started, score: 100005.5, lastWrongOptionId: 'x'.repeat(65) });
+    expect(remote.score).toBe(100000);
+    expect(remote.lastWrongOptionId).toBeNull();
+  });
+  it('시각은 규칙 상한 안으로 맞춘다', () => {
+    expect(clampStamp(Number.MAX_SAFE_INTEGER)).toBe(STAMP_MAX);
+    expect(clampStamp(-5)).toBe(0);
+    expect(clampStamp(STAMP_MAX - 1)).toBe(STAMP_MAX - 1);
+  });
+  it('없는 미션 번호는 적립하지 않는다', () => {
+    expect(characterOfMission('reading-nietzsche-2')).toBe('nietzsche');
+    expect(characterOfMission('reading-nietzsche-9')).toBeNull();
+  });
+});
+
+describe('서고 크기 한도', () => {
+  it('200권까지는 올리고 201권이면 멈춘다', () => {
+    const many = (n: number) => lib('나', Array.from({ length: n }, (_, i) => book(String(i))));
+    expect(libraryTooLarge(many(LIBRARY_MAX_BOOKS))).toBe(false);
+    expect(libraryTooLarge(many(LIBRARY_MAX_BOOKS + 1))).toBe(true);
+  });
+  it('약 900KB를 넘으면 멈춘다. 한글은 바이트로 잰다', () => {
+    expect(libraryTooLarge(lib('나', [book('a', undefined, 'a'.repeat(800_000))]))).toBe(false);
+    expect(libraryTooLarge(lib('나', [book('a', undefined, '가'.repeat(300_001))]))).toBe(true);
+  });
+});
+
+describe('실패 처리', () => {
+  it('재시도 간격은 두 배씩 늘고 5분에서 멈춘다', () => {
+    const delays = [RETRY_MIN];
+    for (let i = 0; i < 10; i++) delays.push(nextRetryDelay(delays[i]));
+    expect(delays.slice(0, 3)).toEqual([5000, 10000, 20000]);
+    expect(delays.at(-1)).toBe(RETRY_MAX);
+    expect(Math.max(...delays)).toBe(RETRY_MAX);
+  });
+  it('앞 단계가 실패해도 뒤 단계를 돌리고 실패를 알린다', async () => {
+    const ran: string[] = [];
+    const failed = await runSteps([
+      async () => { throw new Error('user'); },
+      async () => { ran.push('claims'); },
+    ]);
+    expect(ran).toEqual(['claims']);
+    expect(failed).toBe(true);
+    expect(await runSteps([async () => {}])).toBe(false);
   });
 });

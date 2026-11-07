@@ -7,7 +7,7 @@ import { characters, REWARD_SCORE, type CharacterId } from '../data';
 import { loadLibrary, saveLibrary, STORAGE_KEY as LIBRARY_KEY } from '../library.mjs';
 import { getProgress, replaceProgress, subscribe } from '../store/store';
 import { firebaseConfig } from './firebaseConfig';
-import { characterOfMission, fromRemoteProgress, isBlankProgress, mergeLibraries, newClaims, planProgress, toRemoteProgress, usableLibrary, type LibraryDoc } from './merge';
+import { characterOfMission, clampStamp, fromRemoteProgress, isBlankProgress, libraryTooLarge, mergeLibraries, newClaims, nextRetryDelay, planProgress, RETRY_MIN, runSteps, toRemoteProgress, usableLibrary, type LibraryDoc } from './merge';
 
 const META_KEY = 'hipdok:sync:v1';
 
@@ -26,8 +26,8 @@ function readMeta(): Meta {
   try {
     const r = JSON.parse(localStorage.getItem(META_KEY) ?? '{}');
     return {
-      progressUpdatedAt: Number.isSafeInteger(r.progressUpdatedAt) ? r.progressUpdatedAt : 0,
-      libraryUpdatedAt: Number.isSafeInteger(r.libraryUpdatedAt) ? r.libraryUpdatedAt : 0,
+      progressUpdatedAt: Number.isSafeInteger(r.progressUpdatedAt) ? clampStamp(r.progressUpdatedAt) : 0,
+      libraryUpdatedAt: Number.isSafeInteger(r.libraryUpdatedAt) ? clampStamp(r.libraryUpdatedAt) : 0,
       pending: strings(r.pending),
       claimed: strings(r.claimed),
     };
@@ -48,8 +48,6 @@ function writeMeta(change: Partial<Meta>) {
   metaListeners.forEach((listen) => listen());
 }
 
-const RETRY_MIN = 5_000;
-const RETRY_MAX = 300_000;
 const STEP_TIMEOUT = 20_000;
 
 let db: Firestore | null = null;
@@ -58,6 +56,9 @@ let running = false;
 let rerun = false;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let retryDelay = RETRY_MIN;
+/** 실패 뒤 이 시각 전에는 다시 시도하지 않는다. 사용자가 계속 고쳐도 간격을 지킨다. */
+let retryNotBefore = 0;
+let libraryPaused = false;
 let lastProgressText = '';
 
 /** file:// 로 연 단일 파일과 시험 환경은 Firebase 를 쓰지 않는다. */
@@ -126,15 +127,21 @@ async function syncUser(store: Firestore, uid: string) {
       const remoteLibrary = usableLibrary(remote.library);
       if (!local.blocked && (local.data || remoteLibrary)) {
         library = mergeLibraries(local.data, libraryAt, remoteLibrary, remoteLibraryAt);
-        if (JSON.stringify(library) !== JSON.stringify(remote.library)) {
+        if (!libraryTooLarge(library) && JSON.stringify(library) !== JSON.stringify(remote.library)) {
           write.library = JSON.parse(JSON.stringify(library));
-          write.libraryUpdatedAt = Math.max(libraryAt, remoteLibraryAt, 1);
+          write.libraryUpdatedAt = clampStamp(Math.max(libraryAt, remoteLibraryAt, 1));
         }
       }
       if (Object.keys(write).length) tx.set(ref, write, { merge: true });
       return { progress, remote, remoteProgressAt, remoteLibraryAt, library };
     }),
   );
+
+  const paused = Boolean(plan.library && libraryTooLarge(plan.library));
+  if (paused !== libraryPaused) {
+    libraryPaused = paused;
+    metaListeners.forEach((listen) => listen());
+  }
 
   // 동기화하는 사이에 사용자가 또 고쳤으면 그 기록이 더 새것이니 덮지 않는다.
   const now = readMeta();
@@ -179,19 +186,23 @@ async function claimMission(store: Firestore, uid: string, missionId: string, ch
   );
 }
 
+/** 미션 하나가 실패해도 나머지는 받는다. 실패한 미션은 대기 목록에 남아 다음에 다시 시도한다. */
 async function syncClaims(store: Firestore, uid: string) {
-  for (const missionId of readMeta().pending) {
-    const characterId = characterOfMission(missionId);
-    if (characterId) await claimMission(store, uid, missionId, characterId);
-    const meta = readMeta();
-    writeMeta({ pending: meta.pending.filter((id) => id !== missionId), claimed: characterId ? [...meta.claimed, missionId] : meta.claimed });
-  }
+  const failed = await runSteps(
+    readMeta().pending.map((missionId) => async () => {
+      const characterId = characterOfMission(missionId);
+      if (characterId) await claimMission(store, uid, missionId, characterId);
+      const meta = readMeta();
+      writeMeta({ pending: meta.pending.filter((id) => id !== missionId), claimed: characterId ? [...meta.claimed, missionId] : meta.claimed });
+    }),
+  );
+  if (failed) throw new Error('claims');
 }
 
 function schedule(delay: number) {
   if (!started) return;
   clearTimeout(timer);
-  timer = setTimeout(run, delay);
+  timer = setTimeout(run, Math.max(delay, retryNotBefore - Date.now()));
 }
 
 async function run() {
@@ -202,21 +213,27 @@ async function run() {
   const store = database();
   if (!store) return;
   running = true;
+  let failed: boolean;
   try {
     const user = await withTimeout(currentUser());
-    await syncUser(store, user.uid);
-    await syncClaims(store, user.uid);
-    retryDelay = RETRY_MIN;
+    // 진행, 서고 동기화가 실패해도 팬덤 적립은 따로 시도한다.
+    failed = await runSteps([() => syncUser(store, user.uid), () => syncClaims(store, user.uid)]);
   } catch {
+    failed = true;
+  }
+  running = false;
+  if (failed) {
     // 조용히 다시 시도한다. 앱은 계속 로컬로 동작한다.
+    retryNotBefore = Date.now() + retryDelay;
     schedule(retryDelay);
-    retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
-  } finally {
-    running = false;
-    if (rerun) {
-      rerun = false;
-      schedule(1000);
-    }
+    retryDelay = nextRetryDelay(retryDelay);
+  } else {
+    retryDelay = RETRY_MIN;
+    retryNotBefore = 0;
+  }
+  if (rerun) {
+    rerun = false;
+    schedule(1000);
   }
 }
 
@@ -256,7 +273,10 @@ export function startSync() {
   lastProgressText = progressText();
   queueClaims();
   subscribe(onProgressChange);
-  window.addEventListener('online', () => schedule(0));
+  window.addEventListener('online', () => {
+    retryNotBefore = 0;
+    schedule(0);
+  });
   let lastVisible = Date.now();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && Date.now() - lastVisible > 60_000) {
@@ -276,6 +296,9 @@ const subscribeMeta = (listen: () => void) => {
     metaListeners.delete(listen);
   };
 };
+
+/** 서고가 커서 서버 저장을 쉬는 중인지. 기기 기록은 그대로다. */
+export const useLibrarySyncPaused = (): boolean => useSyncExternalStore(subscribeMeta, () => libraryPaused);
 
 export type FandomScores = Record<CharacterId, number>;
 

@@ -1,12 +1,29 @@
 // 기기의 기록과 서버의 기록을 합치는 규칙. 화면도 Firebase도 모르는 순수한 계산이다.
-import { characters, type CharacterId } from '../data';
+import { cards, readings, type CharacterId } from '../data';
 import { freshLibrary, validateBook } from '../library.mjs';
 import { createInitial, sanitize, type Progress } from '../store/progress';
 
 /** 서버에 올리는 진행 기록. 어느 화면을 보고 있었는지(screen)는 기기마다 달라 올리지 않는다. */
 export type RemoteProgress = Omit<Progress, 'screen' | 'version'>;
 
-export const toRemoteProgress = ({ screen: _screen, version: _version, ...rest }: Progress): RemoteProgress => rest;
+const unique = (ids: string[]) => [...new Set(ids)];
+const SCORE_MAX = 100000;
+const SHORT_ID_MAX = 64;
+const shortOrNull = (v: string | null) => (v !== null && v.length > SHORT_ID_MAX ? null : v);
+
+/** 서버 규칙에 맞는 값만 올린다. 옛 카드 id 같은 값은 이 기기에 그대로 두고 올리기에서만 뺀다. */
+export const toRemoteProgress = ({ screen: _screen, version: _version, ...rest }: Progress): RemoteProgress => ({
+  ...rest,
+  dmChoiceId: shortOrNull(rest.dmChoiceId),
+  lastWrongOptionId: shortOrNull(rest.lastWrongOptionId),
+  score: Math.min(Math.floor(rest.score), SCORE_MAX),
+  cards: unique(rest.cards).filter((id) => cards.some((c) => c.id === id)),
+  rewardedMissions: unique(rest.rewardedMissions).filter((id) => readings.some((r) => r.id === id)),
+});
+
+/** 규칙의 시각 상한(2100-01-01)과 같은 값 */
+export const STAMP_MAX = 4102444800000;
+export const clampStamp = (at: number): number => Math.min(Math.max(0, Math.floor(at)), STAMP_MAX);
 
 export const fromRemoteProgress = (remote: unknown, screen: Progress['screen']): Progress =>
   sanitize({ ...(remote && typeof remote === 'object' ? remote : {}), version: 1, screen });
@@ -50,14 +67,34 @@ export function planProgress(local: Progress, localAt: number, hasRemote: boolea
   return { pull: false, push: localAt > 0 || !isBlankProgress(local) };
 }
 
-const MISSION = /^reading-([a-z]+)-\d+$/;
-
-/** 보상 표시의 인물을 읽는다. 앱에 없는 인물이면 null */
-export function characterOfMission(missionId: string): CharacterId | null {
-  const id = MISSION.exec(missionId)?.[1];
-  return characters.some((c) => c.id === id) ? (id as CharacterId) : null;
-}
+/** 보상 표시의 인물을 읽는다. 앱에 없는 미션이면 null */
+export const characterOfMission = (missionId: string): CharacterId | null =>
+  readings.find((r) => r.id === missionId)?.characterId ?? null;
 
 /** 새로 팬덤 점수를 올려야 할 미션. 이미 받았거나 대기 중인 것은 뺀다. */
 export const newClaims = (rewarded: string[], claimed: string[], pending: string[]): string[] =>
   rewarded.filter((id) => characterOfMission(id) && !claimed.includes(id) && !pending.includes(id));
+
+/** 서버 문서 한도(1MiB)와 규칙 한도(200권) 안쪽에서 멈춘다. 넘으면 서버에만 안 올리고 기기 기록은 그대로 둔다. */
+export const LIBRARY_MAX_BOOKS = 200;
+export const LIBRARY_MAX_BYTES = 900_000;
+export const libraryTooLarge = (library: LibraryDoc): boolean =>
+  library.books.length > LIBRARY_MAX_BOOKS || new TextEncoder().encode(JSON.stringify(library)).length > LIBRARY_MAX_BYTES;
+
+export const RETRY_MIN = 5_000;
+export const RETRY_MAX = 300_000;
+/** 실패할수록 간격을 두 배로 늘리되 5분에서 멈춘다. */
+export const nextRetryDelay = (current: number): number => Math.min(current * 2, RETRY_MAX);
+
+/** 앞 단계가 실패해도 뒤 단계를 끝까지 돌린다. 실패가 하나라도 있으면 true */
+export async function runSteps(steps: Array<() => Promise<unknown>>): Promise<boolean> {
+  let failed = false;
+  for (const step of steps) {
+    try {
+      await step();
+    } catch {
+      failed = true;
+    }
+  }
+  return failed;
+}

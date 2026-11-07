@@ -1,8 +1,8 @@
 // firestore.rules 시나리오. `npm run test:rules` (Java 11 이상과 에뮬레이터 필요). 실제 DB에는 닿지 않는다.
 import { readFileSync } from 'node:fs';
 import { assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { collection, deleteDoc, doc, getDoc, getDocs, runTransaction, serverTimestamp, setDoc, updateDoc, type Firestore } from 'firebase/firestore';
-import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
+import { collection, deleteDoc, deleteField, doc, getDoc, getDocs, runTransaction, serverTimestamp, setDoc, updateDoc, type Firestore } from 'firebase/firestore';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 let env: RulesTestEnvironment;
 const db = (uid: string) => env.authenticatedContext(uid).firestore() as unknown as Firestore;
@@ -44,10 +44,49 @@ describe('users', () => {
     await assertFails(getDoc(doc(anon(), 'users/a')));
     await assertFails(setDoc(doc(anon(), 'users/a'), userDoc));
   });
-  it('users 목록 조회와 문서 삭제는 거부', async () => {
+  it('users 목록 조회는 거부', async () => {
     await setDoc(doc(db('a'), 'users/a'), userDoc);
     await assertFails(getDocs(collection(db('a'), 'users')));
-    await assertFails(deleteDoc(doc(db('a'), 'users/a')));
+  });
+  it('내 문서 전체 삭제는 허용, 타인 문서 삭제와 한쪽 칸만 삭제는 거부', async () => {
+    await setDoc(doc(db('a'), 'users/a'), userDoc);
+    await assertFails(deleteDoc(doc(db('b'), 'users/a')));
+    await assertFails(updateDoc(doc(db('a'), 'users/a'), { progressUpdatedAt: deleteField() }));
+    await assertSucceeds(deleteDoc(doc(db('a'), 'users/a')));
+  });
+  it('내 문서를 지워도 claim은 남아 같은 미션을 다시 받지 못한다', async () => {
+    await seedFandom();
+    await setDoc(doc(db('a'), 'users/a'), userDoc);
+    await claim(db('a'), 'a');
+    await deleteDoc(doc(db('a'), 'users/a'));
+    await assertFails(claim(db('a'), 'a'));
+  });
+  it('최종 카드, 미션 id만 허용하고 8개 넘으면 거부', async () => {
+    const d = doc(db('a'), 'users/a');
+    const allCards = readFileSync('src/data/cards.ts', 'utf8').match(/id: '(card-[^']+)'/g)!.map((m) => m.slice(5, -1));
+    expect(allCards).toHaveLength(8);
+    await assertSucceeds(setDoc(d, { ...userDoc, progress: { ...progress, cards: allCards } }));
+    await assertFails(setDoc(d, { ...userDoc, progress: { ...progress, cards: ['card-old'] } }));
+    await assertFails(setDoc(d, { ...userDoc, progress: { ...progress, cards: new Array(9).fill(allCards[0]) } }));
+    await assertFails(setDoc(d, { ...userDoc, progress: { ...progress, rewardedMissions: ['reading-nietzsche-3'] } }));
+    await assertSucceeds(setDoc(d, { ...userDoc, progress: { ...progress, rewardedMissions: ['reading-nietzsche-2'] } }));
+  });
+  it('서버에 옛 카드 id가 남아 있어도 서고 동기화는 막히지 않고, 진행을 새로 올리면 깨끗한 값만 허용', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore() as unknown as Firestore, 'users/a'), { ...userDoc, progress: { ...progress, cards: ['card-old'] } });
+    });
+    const d = doc(db('a'), 'users/a');
+    await assertSucceeds(setDoc(d, { library: { ...library, nickname: '새이름' }, libraryUpdatedAt: 5 }, { merge: true }));
+    await assertFails(setDoc(d, { progress: { ...progress, cards: ['card-old'] }, progressUpdatedAt: 6 }, { merge: true }));
+    await assertSucceeds(setDoc(d, { progress, progressUpdatedAt: 6 }, { merge: true }));
+  });
+  it('시계가 며칠 빠른 기기는 허용, 상한을 넘거나 음수면 거부', async () => {
+    const d = doc(db('a'), 'users/a');
+    await assertSucceeds(setDoc(d, { progress, progressUpdatedAt: Date.now() + 30 * 86400000 }));
+    await assertSucceeds(setDoc(d, { progress, progressUpdatedAt: 4102444800000 }));
+    await assertFails(setDoc(d, { progress, progressUpdatedAt: 4102444800001 }));
+    await assertFails(setDoc(d, { progress, progressUpdatedAt: -1 }));
+    await assertFails(setDoc(d, { progressUpdatedAt: 5 }));
   });
   it('닉네임 21자, 모르는 칸, 잘못된 최애는 거부하고 20자는 허용', async () => {
     const d = doc(db('a'), 'users/a');

@@ -32,7 +32,7 @@ export function RankingList({ ranking, animate = false }: { ranking: Ranking; an
         <h2 id="ranking-title" className="section-title">
           이번 주 팬덤 순위
         </h2>
-        <span className="tag" data-testid="ranking-kind">{ranking.isReal ? '실시간 점수' : '예시 점수'}</span>
+        <span className="tag" data-testid="ranking-kind">{ranking.isReal ? '실시간 참여 집계' : '예시 점수'}</span>
       </div>
       <ol className="ranking">
         {ranking.rows.map((row) => (
