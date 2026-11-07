@@ -1,4 +1,4 @@
-import { NIETZSCHE_EDITIONS } from './editions.mjs';
+import { NIETZSCHE_EDITIONS } from '../../editions.mjs';
 export type PersonalBook = { id:string; title:string; author:string; genre:string; finishedAt:string; quote:string; memo:string; color:string; createdAt:string; updatedAt:string; editionId?:string; isReference?:boolean };
 export type LibraryData = { version:number; nickname:string; books:PersonalBook[] };
 export const shelves = [
@@ -12,7 +12,7 @@ export const shelves = [
 const titles = [
   ['데미안','헤르만 헤세','문학','#46635d'],
   ['차라투스트라는 이렇게 말했다','프리드리히 니체','철학','#70557f'],
-  ['변신','프란츠 카프카','문학','#a37851'],
+  ['싯다르타','헤르만 헤세','문학','#a37851'],
   ['오만과 편견','제인 오스틴','문학','#a3646e'],
   ['명상록','마르쿠스 아우렐리우스','철학','#687b8b'],
   ['자기만의 방','버지니아 울프','에세이','#9a8d63'],

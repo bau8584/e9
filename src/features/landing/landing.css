@@ -1,0 +1,24 @@
+.landing { max-width: 980px; margin: 0 auto; padding: 28px var(--gutter) 32px; }
+.brand { margin: 0 0 18px; font-family: var(--serif); font-weight: 700; color: var(--purple); letter-spacing: .04em; }
+.landing-title { margin: 0; font-family: var(--serif); font-size: clamp(1.75rem, 8vw, 3rem); line-height: 1.25; word-break: keep-all; }
+.landing-sub { margin: 12px 0 24px; color: var(--muted); word-break: keep-all; }
+.landing-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: 1fr; }
+.landing-card {
+  width: 100%; min-height: 44px; padding: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr);
+  text-align: left; background: var(--deep); color: var(--on-deep); border: 0; border-radius: var(--r-card); overflow: hidden; cursor: pointer;
+}
+.landing-card .portrait { min-height: 148px; height: 100%; }
+.landing-card-text { display: flex; flex-direction: column; gap: 2px; padding: 14px 14px 16px; min-width: 0; }
+.landing-name { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; }
+.landing-english { font-size: .75rem; color: var(--on-deep-muted); }
+.landing-line { margin-top: 8px; font-size: .95rem; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
+.landing-card:hover { background: var(--purple); }
+.landing-note { margin: 18px 0 0; font-size: .82rem; color: var(--muted); }
+@media (min-width: 720px) {
+  .landing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .landing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .landing-card { grid-template-columns: 1fr; height: 100%; align-content: start; }
+  .landing-card .portrait { height: 220px; }
+}

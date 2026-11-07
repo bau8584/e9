@@ -1,0 +1,13 @@
+.draw { display: flex; flex-direction: column; gap: 14px; }
+.card-back {
+  align-self: center; width: min(100%, 260px); aspect-ratio: 5 / 7; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  font: inherit; color: var(--on-deep); background: var(--deep); border: 0; border-radius: var(--r-card); outline: 1px solid var(--gold); outline-offset: -10px; cursor: pointer;
+}
+.card-back-mark { font-family: var(--serif); font-size: 4.5rem; font-weight: 700; line-height: 1; color: var(--gold-soft); }
+.card-back-text { font-weight: 700; }
+.reward { padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--purple); border-radius: var(--r-control); }
+.reward p { margin: 0; overflow-wrap: anywhere; }
+.reward-rank { margin-top: 4px !important; color: var(--purple); }
+.reward-in { animation: reward-in .45s ease-out .5s both; }
+.locked-note { margin: 0; font-size: .88rem; color: var(--muted); word-break: keep-all; }
+@keyframes reward-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

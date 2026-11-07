@@ -1,0 +1,17 @@
+.reading-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 700; color: var(--purple); }
+.gate-text { color: var(--muted); word-break: keep-all; }
+.passage { margin: 14px 0 20px; padding: 16px; background: var(--surface); border-left: 3px solid var(--purple); }
+.passage-tags { margin: 0 0 10px; }
+.passage-original { margin: 0 0 10px; font-family: var(--serif); font-size: 1.15rem; line-height: 1.55; overflow-wrap: anywhere; }
+.passage-translation { margin: 0; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
+.passage-note, .passage-source { margin: 8px 0 0; font-size: .78rem; color: var(--muted); word-break: keep-all; }
+.passage-source { margin-top: 2px; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.btn-option { text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--line-strong); font-weight: 500; word-break: keep-all; }
+.btn-option:disabled { opacity: .6; cursor: default; }
+.btn-option.is-wrong { opacity: 1; border-color: var(--danger); color: var(--danger); }
+.hint { margin-top: 14px; padding: 14px; background: var(--danger-soft); border-radius: var(--r-control); }
+.hint-title { margin: 0 0 8px; font-weight: 700; }
+.hint-passage { display: inline; padding: 2px 3px; background: var(--highlight); color: var(--ink); line-height: 1.7; word-break: keep-all; }
+.hint-note { margin: 8px 0 12px; font-size: .9rem; color: var(--muted); word-break: keep-all; }
+.correct-note { margin: 0 0 8px; font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--purple); }

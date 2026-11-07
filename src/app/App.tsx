@@ -1,0 +1,76 @@
+import { useEffect } from 'react';
+import { BottomNav } from '../components/BottomNav';
+import { SaveBanner } from '../components/SaveBanner';
+import { DmPage } from '../features/dm/DmPage';
+import { HomePage } from '../features/home/HomePage';
+import { LandingPage } from '../features/landing/LandingPage';
+import { MyRoomPage } from '../features/my-room/MyRoomPage';
+import { BadgePage } from '../features/onboarding/BadgePage';
+import { OnboardingPage } from '../features/onboarding/OnboardingPage';
+import { ReadingPage } from '../features/reading/ReadingPage';
+import type { Screen } from '../store/progress';
+import { getProgress, goTo, reloadFromStorage, STORAGE_KEY, useSnapshot } from '../store/store';
+
+const MAIN_SCREENS: Screen[] = ['home', 'dm', 'reading', 'myroom'];
+
+export function App() {
+  const { progress, saveFailed } = useSnapshot();
+  const { screen } = progress;
+  const withNav = MAIN_SCREENS.includes(screen);
+
+  // 휴대폰의 뒤로 가기가 앱 안에서 동작하게 한다.
+  useEffect(() => {
+    if (window.history.state?.screen !== screen) {
+      const method = window.history.state?.screen ? 'pushState' : 'replaceState';
+      window.history[method]({ screen }, '');
+    }
+    window.scrollTo(0, 0);
+  }, [screen]);
+
+  useEffect(() => {
+    const onPop = (event: PopStateEvent) => {
+      const target = event.state?.screen as Screen | undefined;
+      const current = getProgress();
+      const onboarded = Boolean(current.nickname && current.favoriteId);
+      if (target && (onboarded ? MAIN_SCREENS.includes(target) : !MAIN_SCREENS.includes(target) && target !== 'badge')) {
+        goTo(target);
+      } else {
+        window.history.pushState({ screen: current.screen }, '');
+      }
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) reloadFromStorage();
+    };
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  return (
+    <>
+      {saveFailed && (
+        <div className="fandom-scope">
+          <SaveBanner />
+        </div>
+      )}
+      {screen === 'myroom' ? (
+        <MyRoomPage />
+      ) : (
+        <div className={`fandom-scope${withNav ? ' with-rail' : ''}`}>
+          <main className={withNav ? 'with-nav' : undefined}>
+            {screen === 'landing' && <LandingPage />}
+            {screen === 'onboarding' && <OnboardingPage />}
+            {screen === 'badge' && <BadgePage />}
+            {screen === 'home' && <HomePage />}
+            {screen === 'dm' && <DmPage />}
+            {screen === 'reading' && <ReadingPage />}
+          </main>
+        </div>
+      )}
+      {withNav && <BottomNav />}
+    </>
+  );
+}

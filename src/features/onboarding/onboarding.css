@@ -1,0 +1,24 @@
+.field-label { display: block; padding: 0; margin: 18px 0 8px; font-weight: 700; }
+.text-input {
+  width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; font-size: 1rem; color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--r-control);
+}
+.text-input[aria-invalid='true'] { border-color: var(--danger); }
+.favorite-field { border: 0; margin: 0; padding: 0; min-width: 0; }
+.favorite-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.favorite-option {
+  min-height: 64px; padding: 10px; display: flex; flex-direction: column; gap: 2px; justify-content: center; text-align: left;
+  font: inherit; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--r-control); cursor: pointer; min-width: 0;
+}
+.favorite-option strong { font-family: var(--serif); font-size: 1.05rem; }
+.favorite-option small { font-size: .72rem; color: var(--muted); overflow-wrap: anywhere; }
+.favorite-option[aria-pressed='true'] { background: var(--purple); border-color: var(--purple); color: var(--on-deep); }
+.favorite-option[aria-pressed='true'] small { color: var(--on-deep-muted); }
+.form-error { min-height: 1.5em; margin: 12px 0 8px; color: var(--danger); font-weight: 700; }
+.badge-page { text-align: center; padding-top: 36px; }
+.badge-kicker { margin: 0 0 14px; font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--purple); }
+.fan-badge { margin: 0 auto; max-width: 280px; padding: 24px 18px; background: var(--deep); color: var(--on-deep); border-radius: var(--r-card); outline: 1px solid var(--gold); outline-offset: -8px; }
+.fan-badge-portrait { width: 112px; height: 112px; margin: 0 auto 14px; border-radius: 50%; overflow: hidden; }
+.fan-badge-name { margin: 0; font-family: var(--serif); font-size: 1.4rem; font-weight: 700; overflow-wrap: anywhere; }
+.fan-badge-nick { margin: 4px 0 0; color: var(--on-deep-muted); overflow-wrap: anywhere; }
+.badge-note { margin: 18px 0; color: var(--muted); word-break: keep-all; }
