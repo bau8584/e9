@@ -226,3 +226,21 @@ describe('미션 1개 시절 기록 옮기기', () => {
     expect(sanitize(legacy({ stage: 'dm', missionIndex: '1' })).missionIndex).toBe(0);
   });
 });
+
+describe('입덕 중 닉네임', () => {
+  it('적던 닉네임이 남고 입덕을 끝내거나 초기화하면 지워진다', () => {
+    store.saveNicknameDraft('덕구');
+    expect(store.readNicknameDraft()).toBe('덕구');
+    store.completeOnboarding('덕구', 'nietzsche');
+    expect(store.readNicknameDraft()).toBe('');
+    store.saveNicknameDraft('다시');
+    store.resetProgress();
+    expect(store.readNicknameDraft()).toBe('');
+  });
+});
+
+describe('조사', () => {
+  it('받침에 맞는 조사를 쓴다', () => {
+    expect(characters.map((c) => c.nameWith)).toEqual(['싯다르타와', '니체와', '제인 오스틴과', '순자와']);
+  });
+});

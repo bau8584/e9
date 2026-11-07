@@ -1,6 +1,6 @@
-// 내 방 담당(희경 선생님)이 쓰는 데이터 함수. 사용법은 README "내 방 연결 방법" 참고.
+// 내 방 담당이 쓰는 데이터 함수. 입덕 쪽 기록은 여기로만 읽는다.
 import { getCard, getCharacter, type Character, type QuoteCard } from '../../data';
-import { cleanNickname, NICKNAME_MAX, type Screen, type Stage } from '../../store/progress';
+import { cleanNickname, isSeasonComplete, NICKNAME_MAX, type Screen, type Stage } from '../../store/progress';
 import { getProgress, goTo, renameNickname, resetProgress, useSnapshot } from '../../store/store';
 
 export { cleanNickname, NICKNAME_MAX, renameNickname };
@@ -20,7 +20,7 @@ export const getCards = (): QuoteCard[] =>
 
 export const getScore = (): number => getProgress().score;
 
-/** 모든 기록을 지우고 첫 화면으로 돌아간다. 실패하면 false. 버튼에 "정말 지울까요?" 확인을 붙일 것. */
+/** 입덕 진행 기록을 지우고 첫 화면으로 돌아간다. 서고는 남는다. 실패하면 false. 버튼에 "정말 지울까요?" 확인을 붙일 것. */
 export const resetAll = (): boolean => resetProgress();
 
 export interface CardGroup {
@@ -56,6 +56,8 @@ export function cardShareText(card: QuoteCard): string {
 }
 
 const MISSION_SCREEN: Record<Stage, Screen> = { dm: 'dm', reading: 'reading', draw: 'reading', done: 'home' };
+
+export const isSeasonDone = (): boolean => isSeasonComplete(getProgress());
 
 /** 지금 단계에 맞는 미션 화면으로 간다. */
 export const goToMission = () => goTo(MISSION_SCREEN[getProgress().stage]);

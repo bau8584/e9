@@ -41,7 +41,7 @@ export function DmPage() {
       </div>
       {chosen ? (
         <button type="button" className="btn btn-primary btn-block" onClick={() => goTo('reading')}>
-          {dm.readButton}
+          {progress.stage === 'done' ? '내가 얻은 카드 보기' : progress.stage === 'draw' ? '카드 뽑으러 가기' : dm.readButton}
         </button>
       ) : (
         <div className="dm-replies">

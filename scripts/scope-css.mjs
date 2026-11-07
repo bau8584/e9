@@ -1,4 +1,4 @@
-// CSS 충돌을 막는다. 희경 선생님의 room.css, style.css 와 입덕 쪽 CSS 는 같은 이름(.tag, .brand 등)을 쓰므로
+// CSS 충돌을 막는다. 내 방의 room.css, style.css 와 입덕 쪽 CSS 는 같은 이름(.tag, .brand 등)을 쓰므로
 // 원본은 고치지 않고 빌드 때 각각 .my-room-scope, .fandom-scope 안으로 묶는다.
 // src/styles/global.css 만 묶지 않는다.
 const scopeOf = (file = '') => {

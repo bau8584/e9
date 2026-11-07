@@ -6,6 +6,8 @@ export interface Character {
   id: CharacterId;
   name: string;
   englishName: string;
+  /** 받침에 맞춘 '○○와/과'. 'DM' 앞에 붙인다. */
+  nameWith: string;
   /** 첫 화면의 도발적인 한 줄 (제작진 각색) */
   tagline: string;
   /** 이름 첫 글자 자리 표시. 이미지가 없을 때 보인다. */

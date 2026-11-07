@@ -8,7 +8,7 @@
 
 ## 바로 실행
 
-저장소를 다운로드한 뒤 **`힙독.html`을 Chrome 또는 Edge로 열면** 실행됩니다. 앱 코드와 캐릭터·도서 표지 이미지를 파일 하나에 포함했습니다. API 키가 필요하지 않습니다.
+저장소를 다운로드한 뒤 **`힙독.html`을 Chrome 또는 Edge로 열면** 실행됩니다. 앱 코드와 캐릭터·도서 표지 이미지를 파일 하나에 포함했습니다. 비밀 키가 필요하지 않습니다. 이렇게 파일로 열면 서버 동기화 없이 이 브라우저에서만 동작합니다.
 
 로컬 파일의 저장 정책은 브라우저마다 다를 수 있습니다. 계속 이용할 때에는 아래 개발 서버 또는 정적 호스팅을 사용하고 중요한 기록은 JSON으로 백업해 주세요.
 
@@ -24,7 +24,8 @@ npm run dev
 기본 주소는 `http://127.0.0.1:5174`입니다.
 
 ```sh
-npm test                  # 서고 테스트 11개 + 진행 기록 테스트 19개 (Node 22 이상)
+npm test                  # 서고 테스트 11개 + 앱 테스트 57개 (Node 22 이상)
+npm run test:rules        # Firestore 규칙 테스트 24개 (에뮬레이터, Java 11 이상 필요. 실제 DB에 닿지 않음)
 npm run typecheck         # TypeScript 검사
 npm run build             # TypeScript 검사 및 프로덕션 빌드
 npm run build:standalone  # 이미지까지 포함한 힙독.html 생성
@@ -44,10 +45,10 @@ npm run build:standalone  # 이미지까지 포함한 힙독.html 생성
 
 ## 데이터와 시연 범위
 
-- 서고 기록은 `hipdok.library.v1`, 입덕과 진행 기록은 `hipdok:v1`에 각각 저장됩니다. 서버 로그인이나 기기 간 동기화는 없습니다.
+- 서고 기록은 `hipdok.library.v1`, 입덕과 진행 기록은 `hipdok:v1`에 각각 저장됩니다. 브라우저 기록이 기준 사본이고, 익명 로그인으로 Firestore에 동기화합니다. 회원가입은 없고, 서고는 본인만 읽습니다. 연결이 안 되면 로컬로 동작하고 조용히 다시 시도합니다.
 - 닉네임: 서고 기록이 아직 없으면 입덕 닉네임을 이름표 초기값으로 씁니다. 이미 저장된 서고 이름은 덮어쓰지 않습니다. 내 방에서 이름을 바꾸면 입덕 닉네임도 같이 바뀝니다.
 - 예시 서고의 9권은 개인 기록과 분리되며 자동으로 저장되지 않습니다.
-- 팬덤 순위는 "예시 점수"입니다. 실시간 경쟁은 없습니다.
+- 팬덤 순위는 연결되면 실제 점수("실시간 점수"), 연결이 안 되거나 `힙독.html`을 파일로 열면 "예시 점수"로 표시합니다.
 - DM과 인물 대사는 "제작진 각색"이며 실제 인물의 발언이 아닙니다. 콘텐츠 검수 상태는 `docs/콘텐츠-검수표.md`, 필요한 그림은 `docs/이미지-목록.md`에 있습니다.
 - 도서 표지는 판본과 출처를 함께 표시합니다. [이미지 자산과 표지 출처](ASSETS.md)를 참고하세요.
 - 책사이의 공간과 가구 스타일을 재사용했습니다. 원본 책사이는 이 저장소에 포함하지 않습니다.
@@ -73,8 +74,21 @@ src/
       myRoomData      내 방이 입덕 쪽 기록(카드, 점수, 최애)을 읽는 유일한 창구
       theme.css       앱 색에 맞춘 덮어쓰기
   library.mjs, editions.mjs, covers.ts, legacy-data.ts  서고 저장 규칙과 표지
-  room.css, style.css  희경 선생님의 서고 스타일(원본 유지)
+  sync/               Firebase 연결(firebaseConfig 공개 설정, merge 합치는 규칙, sync 동기화와 순위 구독)
+  room.css, style.css  내 방 담당의 서고 스타일(원본 유지)
 ```
+
+### Firebase 구조
+
+| 경로 | 내용 | 권한 |
+|---|---|---|
+| `users/{uid}` | `progress`(입덕 진행), `progressUpdatedAt`, `library`(서고, 기기 형식 그대로), `libraryUpdatedAt` | 본인만 읽고 쓰기, 삭제 불가 |
+| `users/{uid}/claims/{missionId}` | 미션 보상 표시. 초기화해도 남음 | 본인만 읽기, 새로 만들기만 |
+| `fandoms/{characterId}` | `score`, `lastMissionId`. 닉네임 없음 | 누구나 읽기. 0으로 생성, claim과 함께 +20만 |
+
+- 충돌: 진행은 수정 시각이 늦은 쪽, 서고는 책 합집합(같은 책은 늦게 고친 쪽). 동기화 상태는 `hipdok:sync:v1`.
+- 규칙은 `firestore.rules`. 미션을 늘리면 규칙의 미션 번호 `[12]`도 늘린다.
+- 익명 계정은 브라우저마다 따로라, 사이트 데이터를 지우면 새 사용자가 되어 같은 미션을 다시 적립할 수 있습니다. 서버 함수가 없는 요금제의 한계입니다.
 
 ### CSS를 나눈 방법
 
@@ -100,4 +114,4 @@ src/
 - `components/`, `styles/`, `app/`, `package.json`을 꼭 고쳐야 하면 상대에게 먼저 알린다.
 - 서고 쪽에서 바꾸지 않는 것: `room.css`의 내용, `library.mjs`, 저장 키, 저장 형식.
 
-기술 구성: React 19, TypeScript, Vite, Vitest, lucide-react.
+기술 구성: React 19, TypeScript, Vite, Vitest, lucide-react, Firebase(익명 인증, Firestore).

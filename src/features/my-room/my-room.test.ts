@@ -19,7 +19,7 @@ const library = (nickname: string) => JSON.stringify({ version: 1, nickname, boo
 const earnCard = () => {
   store.chooseReply(getDm('nietzsche').replies[0].id);
   store.answerQuiz(getReading('nietzsche').correctOptionId);
-  store.drawCard(() => 0.9);
+  store.drawCard();
 };
 
 let root: Root;

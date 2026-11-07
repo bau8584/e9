@@ -5,6 +5,7 @@ import { findEdition } from '../../editions.mjs';
 import { books as legacyCatalog } from '../../legacy-data';
 import { cleanNickname, renameNickname } from './myRoomData';
 import { sampleBooks, nietzscheShelfBooks, type PersonalBook, type LibraryData } from './libraryData';
+import { notifyLibraryChanged, onLibraryMerged } from '../../sync/sync';
 import { blankBook, readInitial, today, type BookDraft } from './storage';
 
 type Popup = 'add' | 'detail' | 'profile' | 'reset' | null;
@@ -33,7 +34,8 @@ export function useLibrary(seedNickname: string) {
   const say=(s:string)=>setToast(s);
   useEffect(()=>{if(!toast)return;const id=setTimeout(()=>setToast(''),4000);return()=>clearTimeout(id);},[toast]);
   useEffect(()=>{const fn=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',fn);return()=>window.removeEventListener('beforeunload',fn);},[dirty]);
-  function commit(next:LibraryData){if(initial.blocked){say('원본 데이터 보존을 위해 저장을 멈췄어요. 먼저 기록을 백업해 주세요.');return false;}try{if(!saveLibrary(localStorage,next))throw Error('save');setData(next);setError('');return true;}catch{setError('저장하지 못했어요. 입력 내용은 유지됩니다. 브라우저 저장 공간과 설정을 확인해 주세요.');return false;}}
+  useEffect(()=>initial.blocked?undefined:onLibraryMerged(merged=>setData(merged as LibraryData)),[initial.blocked]);
+  function commit(next:LibraryData){if(initial.blocked){say('원본 데이터 보존을 위해 저장을 멈췄어요. 먼저 기록을 백업해 주세요.');return false;}try{if(!saveLibrary(localStorage,next))throw Error('save');setData(next);setError('');notifyLibraryChanged();return true;}catch{setError('저장하지 못했어요. 입력 내용은 유지됩니다. 브라우저 저장 공간과 설정을 확인해 주세요.');return false;}}
   function close(){if(dirty&&!confirm('저장하지 않은 내용이 있어요. 닫을까요?'))return;setDirty(false);setPopup(null);}
   function add(){setEditingId(null);setDraft(blankBook());setErrors({});setDirty(false);setPopup('add');}
   function registerBook(book:PersonalBook){setEditingId(null);setDraft({...blankBook(),title:book.title,author:book.author,genre:book.genre,color:book.color,finishedAt:'',editionId:findEdition(book)?.id});setErrors({});setDirty(false);setPopup('add');}

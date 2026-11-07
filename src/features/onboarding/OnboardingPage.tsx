@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { characters } from '../../data';
 import { cleanNickname, EMPTY_NICKNAME_MESSAGE, NICKNAME_MAX } from '../../store/progress';
-import { completeOnboarding, pickFavorite, useSnapshot } from '../../store/store';
+import { completeOnboarding, pickFavorite, readNicknameDraft, saveNicknameDraft, useSnapshot } from '../../store/store';
 import { savedLibraryNickname } from '../my-room/storage';
 import './onboarding.css';
 
 export function OnboardingPage() {
   const { progress } = useSnapshot();
-  const [nickname, setNickname] = useState(() => progress.nickname || cleanNickname(savedLibraryNickname()));
+  const [nickname, setNickname] = useState(() => readNicknameDraft() || progress.nickname || cleanNickname(savedLibraryNickname()));
   const [error, setError] = useState('');
 
   const submit = (event: FormEvent) => {
@@ -40,6 +40,7 @@ export function OnboardingPage() {
         aria-describedby="onboarding-error"
         onChange={(e) => {
           setNickname(e.target.value);
+          saveNicknameDraft(e.target.value);
           setError('');
         }}
       />

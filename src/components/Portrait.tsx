@@ -2,7 +2,7 @@ import nietzsche from '../assets/nietzsche.png';
 import type { Character, CharacterId } from '../data';
 import { ImageSlot } from './ImageSlot';
 
-// 그림이 준비된 인물만 적는다. 나머지는 자리 표시(또는 public/images 파일).
+// 앱에 묶인 그림이 있는 인물. 여기 있으면 public/images 의 같은 이름 파일보다 먼저 쓴다(지금은 니체).
 const portraits: Partial<Record<CharacterId, string>> = { nietzsche };
 
 export function Portrait({ character, className }: { character: Character; className?: string }) {

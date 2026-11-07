@@ -2,7 +2,7 @@
 import { Copy, RotateCcw } from 'lucide-react';
 import { QuoteCardView } from '../../components/QuoteCardView';
 import type { QuoteCard } from '../../data';
-import { cardShareText, goToMission, useMyRoomData } from './myRoomData';
+import { cardShareText, goToMission, isSeasonDone, useMyRoomData } from './myRoomData';
 import type { Library } from './useLibrary';
 
 /** 클립보드에 복사한다. 외부로 보내지 않는다. 파일로 열어 clipboard 를 못 쓰면 옛 방식으로 시도한다. */
@@ -28,13 +28,30 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** 내 방 맨 위 요약. 아래쪽 카드 구역과 지금 할 미션으로 바로 간다. */
+export function CardSummary() {
+  const { favorite, cards, score } = useMyRoomData();
+  return (
+    <section className="my-cards-summary" aria-label="내 카드 요약">
+      <p>
+        {favorite && <span className="fan-tag">{favorite.name} 팬</span>}
+        <span>문장 카드 <strong>{cards.length}</strong>장, <strong>{score}</strong>점</span>
+      </p>
+      <div>
+        <button className="secondary" onClick={() => document.getElementById('my-cards')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>카드 보기</button>
+        {!isSeasonDone() && <button className="primary" onClick={goToMission}>미션 이어 하기</button>}
+      </div>
+    </section>
+  );
+}
+
 export function MyCards({ lib }: { lib: Library }) {
   const { favorite, cards, score, groups } = useMyRoomData();
   async function copy(card: QuoteCard) {
     lib.say((await copyText(cardShareText(card))) ? '카드 문장을 복사했어요.' : '복사하지 못했어요. 문장을 길게 눌러 복사해 주세요.');
   }
   return (
-    <section className="my-cards" aria-labelledby="my-cards-title">
+    <section id="my-cards" className="my-cards" aria-labelledby="my-cards-title">
       <div className="my-cards-head">
         <div>
           <span className="eyebrow">MY QUOTE CARDS</span>

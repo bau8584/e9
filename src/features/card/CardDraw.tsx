@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { QuoteCardView } from '../../components/QuoteCardView';
-import { RankingList } from '../../components/RankingList';
-import { getCard, getCardsOf, REWARD_SCORE } from '../../data';
-import { isSeasonComplete, rankOf } from '../../store/progress';
+import { RankingList, useRanking } from '../../components/RankingList';
+import { getCard, getCardsOf, getReading, REWARD_SCORE } from '../../data';
+import { isSeasonComplete } from '../../store/progress';
 import { drawCard, goTo, useSnapshot } from '../../store/store';
+import { isMissionClaimed } from '../../sync/sync';
 import './card.css';
 
 export function CardDraw() {
   const { progress } = useSnapshot();
   const [justDrew, setJustDrew] = useState(false);
+  // 초기화 전에 이미 팬덤에 반영한 미션이면 이번에는 팬덤 점수가 오르지 않는다.
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const favoriteId = progress.favoriteId;
-  if (!favoriteId) return null;
+  const ranking = useRanking(favoriteId, progress.score);
+  if (!favoriteId || !ranking) return null;
 
   if (progress.stage === 'draw') {
     return (
@@ -20,6 +24,7 @@ export function CardDraw() {
           type="button"
           className="card-back"
           onClick={() => {
+            setAlreadyClaimed(isMissionClaimed(getReading(favoriteId, progress.missionIndex).id));
             setJustDrew(true);
             drawCard();
           }}
@@ -39,8 +44,8 @@ export function CardDraw() {
     })
     .reverse();
   const missing = getCardsOf(favoriteId).filter((c) => !progress.cards.includes(c.id));
-  const before = rankOf(favoriteId, Math.max(0, progress.score - REWARD_SCORE));
-  const after = rankOf(favoriteId, progress.score);
+  const { rankBefore: before, rankNow: after } = ranking;
+  const noFandomGain = ranking.isReal && alreadyClaimed;
 
   return (
     <section className="draw">
@@ -48,23 +53,33 @@ export function CardDraw() {
       {owned.map((card, index) => (
         <QuoteCardView key={card.id} card={card} reveal={justDrew && index === 0} />
       ))}
-      <div className={`reward${justDrew ? ' reward-in' : ''}`}>
-        <p className="reward-score">
-          팬덤 점수 <strong>+{REWARD_SCORE}</strong>, 내 점수 <strong data-testid="reward-total">{progress.score}</strong>점
-        </p>
-        <p className="reward-rank">
-          {before === after ? (
-            <>
-              팬덤 순위 <strong>{after}위</strong> 유지
-            </>
+      {justDrew && (
+        <div className="reward reward-in">
+          {noFandomGain ? (
+            <p className="reward-score">
+              내 점수 <strong data-testid="reward-total">{progress.score}</strong>점. 이 미션은 전에 팬덤 점수에 반영돼 순위 점수는 그대로예요.
+            </p>
           ) : (
             <>
-              팬덤 순위 {before}위에서 <strong>{after}위</strong>로
+              <p className="reward-score">
+                팬덤 점수 <strong>+{REWARD_SCORE}</strong>, 내 점수 <strong data-testid="reward-total">{progress.score}</strong>점
+              </p>
+              <p className="reward-rank">
+                {before === after ? (
+                  <>
+                    팬덤 순위 <strong>{after}위</strong> 유지
+                  </>
+                ) : (
+                  <>
+                    팬덤 순위 {before}위에서 <strong>{after}위</strong>로
+                  </>
+                )}
+              </p>
             </>
           )}
-        </p>
-      </div>
-      <RankingList favoriteId={favoriteId} score={progress.score} animate={justDrew} />
+        </div>
+      )}
+      <RankingList ranking={ranking} animate={justDrew} />
       {missing.map((card) => (
         <p key={card.id} className="locked-note">
           {card.rarity} 카드 한 장이 더 남아 있어요. 홈에 온 다음 DM에 답하면 얻을 수 있어요.

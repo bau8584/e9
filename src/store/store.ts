@@ -42,7 +42,7 @@ function commit(progress: Progress) {
 
 export const getProgress = (): Progress => snapshot.progress;
 
-function subscribe(listen: () => void) {
+export function subscribe(listen: () => void) {
   listeners.add(listen);
   return () => listeners.delete(listen);
 }
@@ -74,8 +74,11 @@ export const startOnboarding = (favoriteId?: CharacterId) =>
 
 export const pickFavorite = (favoriteId: CharacterId) => commit({ ...snapshot.progress, favoriteId });
 
-export const completeOnboarding = (nickname: string, favoriteId: CharacterId) =>
-  commit(rules.completeOnboarding(snapshot.progress, nickname, favoriteId));
+export function completeOnboarding(nickname: string, favoriteId: CharacterId) {
+  const next = rules.completeOnboarding(snapshot.progress, nickname, favoriteId);
+  if (next !== snapshot.progress) saveNicknameDraft('');
+  commit(next);
+}
 
 /** 내 방에서 이름을 바꾸면 입덕 닉네임도 같이 바꾼다. */
 export const renameNickname = (raw: string) => {
@@ -97,10 +100,36 @@ export function answerQuiz(optionId: string): boolean {
 
 export const clearWrongAnswer = () => commit({ ...snapshot.progress, lastWrongOptionId: null });
 
-/** 받는 카드는 미션마다 정해져 있다. 인자는 옛 확률 뽑기 시절 호출을 깨지 않으려 받기만 하고 쓰지 않는다. */
-export const drawCard = (_unused?: unknown) => commit(rules.drawCard(snapshot.progress));
+/** 받는 카드는 미션마다 정해져 있다. */
+export const drawCard = () => commit(rules.drawCard(snapshot.progress));
 
-/** 모든 기록을 지우고 첫 화면으로. 지우기에 실패하면 false를 돌려준다. */
+/** 서버의 더 새로운 기록으로 바꾼다. 처음 화면에 있었고 입덕 기록이 왔으면 홈으로 보낸다. */
+export function replaceProgress(next: Progress) {
+  const landed = next.screen === 'landing' && Boolean(next.nickname && next.favoriteId);
+  commit(landed ? { ...next, screen: 'home' } : next);
+}
+
+const NICKNAME_DRAFT_KEY = 'hipdok:nicknameDraft';
+
+/** 입덕 신고서에 적던 닉네임. 새로고침해도 남게 따로 둔다. */
+export function readNicknameDraft(): string {
+  try {
+    return window.localStorage.getItem(NICKNAME_DRAFT_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveNicknameDraft(text: string) {
+  try {
+    if (text) window.localStorage.setItem(NICKNAME_DRAFT_KEY, text);
+    else window.localStorage.removeItem(NICKNAME_DRAFT_KEY);
+  } catch {
+    /* 저장이 막혀도 입력은 화면에 남는다 */
+  }
+}
+
+/** 입덕 진행 기록을 지우고 첫 화면으로. 서고는 건드리지 않는다. 지우기에 실패하면 false를 돌려준다. */
 export function resetProgress(): boolean {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
@@ -108,6 +137,7 @@ export function resetProgress(): boolean {
     publish({ ...snapshot, saveFailed: true });
     return false;
   }
+  saveNicknameDraft('');
   publish({ progress: rules.createInitial(), saveFailed: false });
   return true;
 }

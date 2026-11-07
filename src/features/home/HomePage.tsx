@@ -1,5 +1,5 @@
 import { Portrait } from '../../components/Portrait';
-import { RankingList } from '../../components/RankingList';
+import { RankingList, useRanking } from '../../components/RankingList';
 import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
 import { isSeasonComplete, type Stage } from '../../store/progress';
 import { goTo, useSnapshot } from '../../store/store';
@@ -13,7 +13,8 @@ const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: strin
 
 export function HomePage() {
   const { progress } = useSnapshot();
-  if (!progress.favoriteId) return null;
+  const ranking = useRanking(progress.favoriteId, progress.score);
+  if (!progress.favoriteId || !ranking) return null;
   const character = getCharacter(progress.favoriteId);
   const dm = getDm(character.id, progress.missionIndex);
   const reading = getReading(character.id, progress.missionIndex);
@@ -33,11 +34,6 @@ export function HomePage() {
           </p>
         </div>
       </section>
-
-      <button type="button" className="dm-banner" onClick={() => goTo('dm')}>
-        <span className="dm-banner-label">{progress.dmChoiceId ? `${character.name}와의 DM` : `새 DM, ${character.name}`}</span>
-        <span className="dm-banner-text">{dm.preview}</span>
-      </button>
 
       {isSeasonComplete(progress) ? (
         <section className="panel" data-testid="season-complete">
@@ -63,7 +59,12 @@ export function HomePage() {
         </section>
       )}
 
-      <RankingList favoriteId={character.id} score={progress.score} />
+      <button type="button" className="dm-banner" onClick={() => goTo('dm')}>
+        <span className="dm-banner-label">{progress.dmChoiceId ? `${character.nameWith}의 DM` : `새 DM, ${character.name}`}</span>
+        <span className="dm-banner-text">{dm.preview}</span>
+      </button>
+
+      <RankingList ranking={ranking} />
     </div>
   );
 }

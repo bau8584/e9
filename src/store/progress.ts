@@ -143,6 +143,14 @@ export function computeRanking(favoriteId: CharacterId, myScore: number): RankRo
 export const rankOf = (favoriteId: CharacterId, myScore: number): number =>
   computeRanking(favoriteId, myScore).find((r) => r.isFavorite)?.rank ?? 0;
 
+/** 실제 팬덤 점수로 줄을 세운다. 점수가 같으면 같은 순위, 내 최애를 먼저 적는다. 전부 0이어도 그대로 보인다. */
+export function computeRealRanking(favoriteId: CharacterId, scores: Record<CharacterId, number>): RankRow[] {
+  const rows = characters
+    .map((c) => ({ id: c.id, name: c.name, score: scores[c.id] ?? 0, isFavorite: c.id === favoriteId }))
+    .sort((a, b) => b.score - a.score || Number(b.isFavorite) - Number(a.isFavorite));
+  return rows.map((row) => ({ ...row, rank: rows.findIndex((other) => other.score === row.score) + 1 }));
+}
+
 const SCREENS: Screen[] = ['landing', 'onboarding', 'badge', 'home', 'dm', 'reading', 'myroom'];
 const STAGES: Stage[] = ['dm', 'reading', 'draw', 'done'];
 
@@ -165,15 +173,17 @@ export function sanitize(raw: unknown): Progress {
     favoriteId && getDm(favoriteId, missionIndex).replies.some((reply) => reply.id === r.dmChoiceId)
       ? (r.dmChoiceId as string)
       : null;
+  const stage: Stage = onboarded && STAGES.includes(r.stage as Stage) ? (r.stage as Stage) : 'dm';
   const clean: Progress = {
     version: 1,
     nickname,
     favoriteId,
     screen: !onboarded && needsOnboarding ? 'landing' : screen,
     missionIndex,
-    stage: onboarded && STAGES.includes(r.stage as Stage) ? (r.stage as Stage) : 'dm',
+    stage,
     dmRead: r.dmRead === true,
-    dmChoiceId,
+    // 단계가 dm인데 답장만 남아 있으면 답장도 못 하고 원문도 안 열려 DM과 읽기를 끝없이 오간다. 답장을 비운다.
+    dmChoiceId: stage === 'dm' ? null : dmChoiceId,
     lastWrongOptionId: typeof r.lastWrongOptionId === 'string' ? r.lastWrongOptionId : null,
     cards: Array.isArray(r.cards) ? r.cards.filter((id) => typeof id === 'string' && getCard(id)) : [],
     score: typeof r.score === 'number' && Number.isFinite(r.score) && r.score >= 0 ? r.score : 0,
