@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { QuoteCardView } from '../../components/QuoteCardView';
 import { RankingList, useRanking } from '../../components/RankingList';
 import { getCard, getCardsOf, getReading, REWARD_SCORE } from '../../data';
@@ -14,6 +14,8 @@ export function CardDraw() {
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const favoriteId = progress.favoriteId;
   const ranking = useRanking(favoriteId, progress.score);
+  // 연출 도중 집계가 바뀌어도 흔들리지 않게, 공개되는 순간의 순위를 고정한다.
+  const moveRef = useRef<{ from: number; to: number } | null>(null);
   if (!favoriteId || !ranking) return null;
 
   if (progress.stage === 'draw') {
@@ -46,13 +48,39 @@ export function CardDraw() {
   const missing = getCardsOf(favoriteId).filter((c) => !progress.cards.includes(c.id));
   const { rankBefore: before, rankNow: after } = ranking;
   const noFandomGain = alreadyClaimed;
+  if (justDrew && !moveRef.current) moveRef.current = { from: before, to: after };
+  const move = moveRef.current;
+  // 희귀는 떨림 400 + 회전 800 + 금빛 700. 카드가 끝난 뒤에 보상과 순위가 이어진다.
+  const rareDrawn = justDrew && owned[0]?.rarity === '희귀';
+  const rise = move && !noFandomGain && move.from > move.to ? { ...move, delay: rareDrawn ? 1900 : 900 } : null;
 
   return (
-    <section className="draw">
+    <section className="draw" style={{ '--reward-delay': rareDrawn ? '1500ms' : '650ms' } as CSSProperties}>
       <h1 className="title">{justDrew ? '카드 획득' : '내가 얻은 카드'}</h1>
-      {owned.map((card, index) => (
-        <QuoteCardView key={card.id} card={card} reveal={justDrew && index === 0} />
-      ))}
+      {owned.map((card, index) =>
+        justDrew && index === 0 ? (
+          <div key={card.id} className={`flip${rareDrawn ? ' is-rare' : ''}`}>
+            <div className="flip-inner">
+              <div className="flip-front">
+                <QuoteCardView card={card} />
+              </div>
+              <div className="flip-back" aria-hidden="true">
+                <span className="card-back-mark">讀</span>
+              </div>
+            </div>
+            {rareDrawn && (
+              <>
+                <span className="flip-shine" aria-hidden="true" />
+                {Array.from({ length: 8 }, (_, i) => (
+                  <span key={i} className="flip-dust" aria-hidden="true" />
+                ))}
+              </>
+            )}
+          </div>
+        ) : (
+          <QuoteCardView key={card.id} card={card} />
+        ),
+      )}
       {justDrew && (
         <div className="reward reward-in">
           {noFandomGain ? (
@@ -79,7 +107,7 @@ export function CardDraw() {
           )}
         </div>
       )}
-      <RankingList ranking={ranking} animate={justDrew} />
+      <RankingList ranking={ranking} rise={rise} />
       {missing.map((card) => (
         <p key={card.id} className="locked-note">
           {card.rarity} 카드 한 장이 더 남아 있어요. 홈에 온 다음 DM에 답하면 얻을 수 있어요.

@@ -1,11 +1,10 @@
 .reading-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 700; color: var(--purple); }
 .gate-text { color: var(--muted); word-break: keep-all; }
-.passage { margin: 14px 0 20px; padding: 16px; background: var(--surface); border-left: 3px solid var(--purple); }
+.passage { margin: 24px 0 32px; padding: 0 2px; }
 .passage-tags { margin: 0 0 10px; }
-.passage-original { margin: 0 0 10px; font-family: var(--serif); font-size: 1.15rem; line-height: 1.55; overflow-wrap: anywhere; }
-.passage-translation { margin: 0; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
-.passage-note, .passage-source { margin: 8px 0 0; font-size: .78rem; color: var(--muted); word-break: keep-all; }
-.passage-source { margin-top: 2px; }
+.passage-original { margin: 0 0 18px; font-family: var(--serif); font-size: 1.4rem; line-height: 1.7; overflow-wrap: anywhere; }
+.passage-translation { margin: 0; font-size: 1.05rem; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.passage-source { margin: 14px 0 0; font-size: .78rem; color: var(--muted); word-break: keep-all; }
 .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .btn-option { text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--line-strong); font-weight: 500; word-break: keep-all; }
 .btn-option:disabled { opacity: .6; cursor: default; }

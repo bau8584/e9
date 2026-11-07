@@ -1,0 +1,12 @@
+/* 내 방의 움직임. room.css, style.css 는 고치지 않고 여기서 덮는다. 시간과 곡선은 global.css 값. */
+.player { transition: top 160ms var(--ease-move), left 160ms var(--ease-move); }
+.primary:active:not(:disabled), .secondary:active:not(:disabled), .text-btn:active { transform: scale(.97); }
+.book-card:active { transform: scale(.98); }
+.dialog[open] { animation: hd-dialog-in var(--t-base) var(--ease-out); }
+.dialog[open]::backdrop { animation: hd-fade-in var(--t-base) linear; }
+.toast { animation: hd-fade-in var(--t-base) var(--ease-out); }
+.book-card.just-added { animation: hd-book-land var(--t-peak) var(--ease-spring) 350ms backwards; }
+.my-card-item .quote-card { transition: transform var(--t-base) var(--ease-out); }
+@media (hover: hover) { .my-card-item .quote-card:hover { transform: translateY(-3px); } }
+@keyframes hd-dialog-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+@keyframes hd-book-land { from { opacity: 0; transform: translateY(-46px) rotate(-3deg); } }

@@ -8,6 +8,55 @@
 .reward { padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--purple); border-radius: var(--r-control); }
 .reward p { margin: 0; overflow-wrap: anywhere; }
 .reward-rank { margin-top: 4px !important; color: var(--purple); }
-.reward-in { animation: reward-in .45s ease-out .5s both; }
+.reward-in { animation: reward-in var(--t-slow) var(--ease-out) var(--reward-delay, 700ms) backwards; }
 .locked-note { margin: 0; font-size: .88rem; color: var(--muted); word-break: keep-all; }
-@keyframes reward-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes reward-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* 카드 뒤집기. 기본 상태가 앞면이라, 움직임이 꺼져도 카드가 바로 보인다. */
+.flip { position: relative; align-self: center; width: min(100%, 320px); perspective: 1100px; }
+.flip-inner { position: relative; transform-style: preserve-3d; animation: hd-flip 600ms var(--ease-move) both; }
+.flip-front, .flip-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip-front .quote-card { width: 100%; }
+.flip-back {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--on-deep); background: var(--deep); border-radius: var(--r-card); outline: 1px solid var(--gold); outline-offset: -10px; transform: rotateY(180deg);
+}
+@keyframes hd-flip {
+  0% { transform: rotateY(180deg); }
+  82% { transform: rotateY(-7deg); }
+  100% { transform: none; }
+}
+
+/* 희귀: 떨리고, 더 천천히 돌고, 금빛이 한 번 스치고, 금가루가 흩어진다 */
+.flip.is-rare { animation: hd-shake 400ms linear; }
+.flip.is-rare .flip-inner { animation-duration: var(--t-peak); animation-delay: 400ms; }
+@keyframes hd-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-3px) rotate(-.8deg); }
+  40% { transform: translateX(3px) rotate(.8deg); }
+  60% { transform: translateX(-4px) rotate(-1deg); }
+  80% { transform: translateX(4px) rotate(1deg); }
+}
+.flip-shine { position: absolute; inset: 0; z-index: 1; overflow: hidden; border-radius: var(--r-card); pointer-events: none; }
+.flip-shine::after {
+  content: ''; position: absolute; top: -10%; bottom: -10%; left: 0; width: 45%; opacity: 0;
+  background: linear-gradient(100deg, transparent, rgba(231, 204, 143, .75), transparent);
+  animation: hd-shine 700ms var(--ease-move) 1200ms;
+}
+@keyframes hd-shine {
+  from { opacity: 1; transform: translateX(-120%) skewX(-12deg); }
+  to { opacity: 1; transform: translateX(260%) skewX(-12deg); }
+}
+.flip-dust { position: absolute; left: 50%; top: 50%; z-index: 2; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-soft); opacity: 0; pointer-events: none; animation: hd-dust 700ms var(--ease-out) 1200ms; }
+.flip-dust:nth-of-type(1) { --x: -170px; --y: -130px; }
+.flip-dust:nth-of-type(2) { --x: 165px; --y: -145px; }
+.flip-dust:nth-of-type(3) { --x: -180px; --y: 30px; }
+.flip-dust:nth-of-type(4) { --x: 180px; --y: 15px; }
+.flip-dust:nth-of-type(5) { --x: -130px; --y: 170px; }
+.flip-dust:nth-of-type(6) { --x: 135px; --y: 175px; }
+.flip-dust:nth-of-type(7) { --x: -40px; --y: -195px; }
+.flip-dust:nth-of-type(8) { --x: 45px; --y: 200px; }
+@keyframes hd-dust {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(.3); }
+}
