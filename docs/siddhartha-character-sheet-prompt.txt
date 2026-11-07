@@ -1,0 +1,20 @@
+사용 도구: 내장 image_gen
+결과: 싯다르타 전신 6포즈, 3×2 배열, 투명 배경 PNG
+검증: PNG 알파 채널 존재 및 포즈 사이 투명 영역 확인
+
+최종 프롬프트:
+Edit the first reference image into a production-ready transparent character pose sheet. Reference 1 is the approved Siddhartha character and is the ONLY reference for his identity, face, age, hair, body, clothing, colors and rendering. Reference 2 is ONLY the required asset layout: exactly six isolated full-body poses, three across and two down, on genuine transparent alpha. Do not borrow the older Chinese man's identity, beard, clothing or props from reference 2.
+
+Preserve the approved character from reference 1 precisely: handsome clean-shaven South Asian man in his 30s, warm brown skin, long black loosely half-tied hair with loose framing strands, sculpted elegant face, tall lean muscular build, bare feet, layered ivory dhoti and river-indigo draped shawl with subdued gold borders, cloth sash and small cord bracelet. Same detailed semi-realistic painted 3D-quality rendering, refined tactile fabric and realistic lighting. His charm is proud independence, searching intellect and subtle tender warmth. Keep the face consistent in all six poses.
+
+OUTPUT REQUIREMENTS: One landscape sheet, approximately 3:2 proportions. Exactly SIX complete figures in a strict evenly spaced 3-column x 2-row arrangement. Each figure entirely contained in its own cell with generous transparent gutters and outer margin, ready to be cropped separately. Entire head, all hair, hands, costume, feet and any prop visible. Consistent character proportions and rendering throughout. No portraits, close-up heads, titles, text, letters, captions, border, panels or palette swatches. No ivory page background. Actual transparent background, not black, not white, not checkerboard. No scenery, landscape, water, grass, rocks, platforms, floor planes or cast shadow beneath the feet. Keep only the isolated character plus his held prop if specified.
+
+SIX POSES, adapted to the personality of Hesse's fictional Siddhartha:
+Top left: Full standing front three-quarter contrapposto, one hand lightly touching his chin, other forearm folded loosely across his waist, eyes looking to the side in skeptical independent thought, subtle proud brow.
+Top center: A calm decisive walking stride toward the viewer in three-quarter angle, shawl flowing slightly, one hand extended palm-up as if challenging a conventional answer, confident searching gaze. No combat pose.
+Top right: Full standing relaxed posture with a long simple wooden ferry pole held upright close to his body, head gently inclined toward an unseen traveler, subtle warm smile and attentive gaze.
+Bottom left: Seated cross-legged naturally, hands resting easily on his knees, awake eyes softly lowered in deep listening, composed but human, all feet and clothing fully visible, no cushion or seat.
+Bottom center: Full-body three-quarter rear view taking a quiet step away, looking back over his shoulder, one hand lightly gathering the shawl at his chest, graceful flowing fabric and independent self-assurance.
+Bottom right: Seated on the ground informally with one knee raised and the other leg folded, resting a forearm on the raised knee and offering his other hand gently forward, a rare tender amused smile, approachable warmth and emotional depth. No chair, no stone, no environment.
+
+No change of costume or age between poses. No beard or mustache, no elderly Chinese scholar, no extra facial vignettes. Do not depict the Buddha or religious iconography, no halo or lotus throne. Premium appealing character collectible quality, expressive nuanced faces and beautiful hands. True transparent alpha is essential.

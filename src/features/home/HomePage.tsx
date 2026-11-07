@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import packPage from './philosopher-pack.html?raw';
 import { Portrait } from '../../components/Portrait';
 import { RankingList, useRanking } from '../../components/RankingList';
 import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
@@ -19,6 +20,7 @@ const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: strin
 const arrivedBanners = new Set<string>();
 
 export function HomePage() {
+  const packDialog = useRef<HTMLDialogElement>(null);
   const { progress } = useSnapshot();
   const ranking = useRanking(progress.favoriteId, progress.score);
   const [arriving] = useState(() => {
@@ -105,6 +107,19 @@ export function HomePage() {
         <span className="dm-banner-text">{dm.preview}</span>
       </button>
 
+      <section className="panel">
+        <h2 className="section-title">사유의 초상</h2>
+        <p className="mission-text">배움·관계·자유 팩에서 사상가를 만나고 초상 카드를 모아 보세요.</p>
+        <button type="button" className="btn btn-primary btn-block" onClick={() => packDialog.current?.showModal()}>
+          사상가 카드팩 열기
+        </button>
+      </section>
+      <dialog ref={packDialog} aria-label="사상가 카드팩" style={{ padding: 0, width: 'min(880px, 96vw)', maxWidth: '96vw', border: 0, borderRadius: 14, background: '#132725', color: '#f7efda', margin: 'auto' }}>
+        <form method="dialog" style={{ textAlign: 'right', padding: '8px 16px' }}>
+          <button type="submit" className="btn" style={{ color: '#f7efda', background: 'transparent' }}>닫기</button>
+        </form>
+        <iframe title="사유의 초상 카드팩" srcDoc={packPage} loading="lazy" style={{ display: 'block', border: 0, width: '100%', height: 'min(76dvh, 710px)' }} />
+      </dialog>
       <RankingList ranking={ranking} />
     </div>
   );
