@@ -22,3 +22,20 @@
 .fan-badge-name { margin: 0; font-family: var(--serif); font-size: 1.4rem; font-weight: 700; overflow-wrap: anywhere; }
 .fan-badge-nick { margin: 4px 0 0; color: var(--on-deep-muted); overflow-wrap: anywhere; }
 .badge-note { margin: 18px 0; color: var(--muted); word-break: keep-all; }
+
+/* 배지 획득: 찍히듯 안착하고, 금빛이 한 번 스친 뒤 문구가 이어진다 */
+.fan-badge { position: relative; overflow: hidden; animation: hd-stamp 550ms var(--ease-spring) 120ms backwards; }
+.fan-badge::after {
+  content: ''; position: absolute; top: -10%; bottom: -10%; left: 0; width: 45%; opacity: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(231, 204, 143, .7), transparent);
+  animation: hd-badge-shine 700ms var(--ease-move) 620ms;
+}
+.badge-kicker { animation: hd-badge-rise var(--t-slow) var(--ease-out) backwards; }
+.badge-note, .badge-page > .btn { animation: hd-badge-rise var(--t-slow) var(--ease-out) 1050ms backwards; }
+.badge-page > .btn { animation-delay: 1180ms; }
+@keyframes hd-stamp { from { opacity: 0; transform: scale(1.18) rotate(-4deg); } }
+@keyframes hd-badge-shine {
+  from { opacity: 1; transform: translateX(-120%) skewX(-12deg); }
+  to { opacity: 1; transform: translateX(280%) skewX(-12deg); }
+}
+@keyframes hd-badge-rise { from { opacity: 0; transform: translateY(8px); } }

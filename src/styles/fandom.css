@@ -12,7 +12,6 @@
 .btn-small { min-height: 44px; flex: none; padding: 8px 14px; background: var(--ink); color: var(--cream); }
 
 .tag { display: inline-block; padding: 1px 7px; font-size: .72rem; font-weight: 700; color: var(--purple); background: #ece3f4; border-radius: 3px; white-space: nowrap; }
-.tag-review { color: #6e4a06; background: var(--highlight); }
 
 .panel { padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); }
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
@@ -23,7 +22,8 @@
 .image-slot { position: relative; overflow: hidden; background: var(--purple); }
 .image-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
 .image-slot img.is-loaded { opacity: 1; }
-.portrait img { object-position: 82% 20%; }
+.portrait img { object-position: 50% 20%; }
+.portrait-wide img { object-position: 82% 20%; }
 .image-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .image-placeholder::after { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(231, 204, 143, .55); pointer-events: none; }
 .dm-avatar .image-placeholder::after, .fan-badge-portrait .image-placeholder::after { display: none; }
@@ -36,18 +36,18 @@
 .rank-name { min-width: 0; overflow-wrap: anywhere; }
 .rank-name small { font-size: .72rem; color: var(--purple); white-space: nowrap; }
 .rank-score { font-variant-numeric: tabular-nums; }
-.ranking li.rise { animation: rise .6s ease-out .5s both; }
-@keyframes rise { from { transform: translateY(44px); } to { transform: none; } }
 
 .quote-card { align-self: center; width: min(100%, 320px); background: var(--deep); color: var(--on-deep); border-radius: var(--r-card); overflow: hidden; outline: 1px solid var(--line-strong); }
-.quote-card.is-rare { outline: 3px solid var(--gold); }
-.quote-card.reveal { animation: reveal .6s ease-out both; }
+.quote-card.is-rare { position: relative; outline: 3px solid var(--gold); }
+.quote-card.is-rare::after { content: ''; position: absolute; inset: 6px; border: 1px solid var(--gold-soft); border-radius: 6px; pointer-events: none; }
 .quote-card-art { height: 120px; }
+.quote-card.is-rare .quote-card-art { height: 190px; }
+.quote-card.is-rare .quote { font-size: 1.3rem; }
+.quote-card.is-rare .rarity { color: var(--deep); display: inline-block; padding: 1px 8px; background: var(--gold-soft); border-radius: 3px; }
+.quote-card-portrait { position: absolute; inset: 0; }
 .quote-card-body { padding: 14px 16px 16px; }
 .rarity { margin: 0 0 8px; font-size: .78rem; font-weight: 700; color: var(--gold-soft); }
 .quote { margin: 0; font-family: var(--serif); font-size: 1.15rem; line-height: 1.55; overflow-wrap: anywhere; word-break: keep-all; }
 .quote-who { margin: 10px 0 0; font-weight: 700; }
 .quote-source { margin: 2px 0 8px; font-size: .75rem; color: var(--on-deep-muted); word-break: keep-all; }
-.quote-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: .72rem; color: var(--on-deep-muted); }
-@keyframes reveal { from { opacity: 0; transform: perspective(700px) rotateY(90deg); } to { opacity: 1; transform: none; } }
 

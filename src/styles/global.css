@@ -21,7 +21,27 @@
   --r-control: 6px;
   --gutter: 16px;
   --nav-height: 65px;
+  /* 움직임 규칙. 값의 이유는 DESIGN.md */
+  --t-fast: 120ms;
+  --t-base: 240ms;
+  --t-slow: 450ms;
+  --t-peak: 800ms;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-move: cubic-bezier(.65, 0, .35, 1);
+  --ease-over: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-spring: var(--ease-over);
 }
+@supports (animation-timing-function: linear(0, 1)) {
+  :root { --ease-spring: linear(0, .25 8%, .72 20%, 1.08 34%, 1.14 42%, 1.06 58%, .98 74%, 1); }
+}
+
+/* 화면이 바뀔 때 들어오는 쪽만 연출한다. 끝나면 변환이 남지 않아 고정 위치 요소에 영향이 없다. */
+.hd-screen { animation: hd-screen-in var(--t-base) var(--ease-out) backwards; }
+.hd-screen-quiet { animation: hd-fade-in var(--t-fast) linear backwards; }
+@keyframes hd-screen-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes hd-fade-in { from { opacity: 0; } }
+@keyframes hd-pop { 0% { transform: scale(0); } 60% { transform: scale(1.35); } 100% { transform: none; } }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -33,9 +53,12 @@ button { touch-action: manipulation; }
 /* 메뉴: 700px 이하는 하단, 넓으면 왼쪽. 왼쪽 폭은 style.css 의 .main 여백(214, 190, 170px)과 맞춘다. */
 .app-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding-bottom: env(safe-area-inset-bottom); background: var(--surface); border-top: 1px solid var(--line-strong); }
 .app-nav-brand { display: none; }
-.app-nav button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: var(--nav-height); font: inherit; font-size: .8rem; color: var(--muted); background: none; border: 0; cursor: pointer; }
+.app-nav button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: var(--nav-height); font: inherit; font-size: .8rem; color: var(--muted); background: none; border: 0; cursor: pointer; transition: color var(--t-base) var(--ease-out), background-color var(--t-base) var(--ease-out); }
+.app-nav button svg { transition: transform var(--t-base) var(--ease-spring); }
+.app-nav button:active svg { transform: scale(.86); }
+.app-nav button[aria-current='page'] svg { transform: translateY(-1px); }
 .app-nav button[aria-current='page'] { color: var(--purple); font-weight: 700; box-shadow: inset 0 3px 0 var(--purple); }
-.dot { position: absolute; top: 12px; left: calc(50% + 12px); width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.dot { position: absolute; top: 12px; left: calc(50% + 12px); width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: hd-pop var(--t-slow) var(--ease-out) backwards; }
 @media (min-width: 701px) {
   .with-rail { margin-left: 170px; }
   .app-nav { right: auto; top: 0; width: 170px; display: flex; flex-direction: column; gap: 6px; padding: 28px 12px; border-top: 0; border-right: 1px solid var(--line-strong); }

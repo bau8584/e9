@@ -133,6 +133,7 @@ export function saveNicknameDraft(text: string) {
 export function resetProgress(): boolean {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem('hipdok:bond:v1'); // 호감도 장면 기록(store/bond.ts)
   } catch {
     publish({ ...snapshot, saveFailed: true });
     return false;

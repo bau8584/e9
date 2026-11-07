@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { characters } from '../../data';
+import { characters, PLAYABLE_IDS } from '../../data';
 import { cleanNickname, EMPTY_NICKNAME_MESSAGE, NICKNAME_MAX } from '../../store/progress';
 import { completeOnboarding, pickFavorite, readNicknameDraft, saveNicknameDraft, useSnapshot } from '../../store/store';
 import { savedLibraryNickname } from '../my-room/storage';
@@ -47,7 +47,8 @@ export function OnboardingPage() {
       <fieldset className="favorite-field">
         <legend className="field-label">최애</legend>
         <div className="favorite-grid">
-          {characters.map((c) => (
+          {/* 예전에 골라 둔 인물이 있으면 그 사람 화면에서는 그대로 보인다. */}
+          {characters.filter((c) => PLAYABLE_IDS.includes(c.id) || c.id === progress.favoriteId).map((c) => (
             <button
               key={c.id}
               type="button"

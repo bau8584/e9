@@ -11,6 +11,8 @@ import { ReadingPage } from '../features/reading/ReadingPage';
 import type { Screen } from '../store/progress';
 import { getProgress, goTo, reloadFromStorage, STORAGE_KEY, useSnapshot } from '../store/store';
 
+import '../styles/motion.css';
+
 const MAIN_SCREENS: Screen[] = ['home', 'dm', 'reading', 'myroom'];
 
 export function App() {
@@ -57,16 +59,21 @@ export function App() {
         </div>
       )}
       {screen === 'myroom' ? (
-        <MyRoomPage />
+        <div key={screen} className="hd-screen-quiet">
+          <MyRoomPage />
+        </div>
       ) : (
         <div className={`fandom-scope${withNav ? ' with-rail' : ''}`}>
           <main className={withNav ? 'with-nav' : undefined}>
-            {screen === 'landing' && <LandingPage />}
-            {screen === 'onboarding' && <OnboardingPage />}
-            {screen === 'badge' && <BadgePage />}
-            {screen === 'home' && <HomePage />}
-            {screen === 'dm' && <DmPage />}
-            {screen === 'reading' && <ReadingPage />}
+            {/* 읽기는 집중하는 화면이라 위치 이동 없이 살짝만 나타난다 */}
+            <div key={screen} className={screen === 'reading' ? 'hd-screen-quiet' : 'hd-screen'}>
+              {screen === 'landing' && <LandingPage />}
+              {screen === 'onboarding' && <OnboardingPage />}
+              {screen === 'badge' && <BadgePage />}
+              {screen === 'home' && <HomePage />}
+              {screen === 'dm' && <DmPage />}
+              {screen === 'reading' && <ReadingPage />}
+            </div>
           </main>
         </div>
       )}

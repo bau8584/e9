@@ -1,6 +1,6 @@
 import { Portrait } from '../../components/Portrait';
 import { AdaptedLabel } from '../../components/Labels';
-import { characters } from '../../data';
+import { characters, PLAYABLE_IDS, upcomingAuthors } from '../../data';
 import { startOnboarding } from '../../store/store';
 import './landing.css';
 
@@ -13,7 +13,7 @@ export function LandingPage() {
         <p className="landing-sub">최애를 정하고, DM을 받고, 원문을 읽어 문장 카드를 모으는 고전 팬덤.</p>
       </header>
       <ul className="landing-grid">
-        {characters.map((c) => (
+        {characters.filter((c) => PLAYABLE_IDS.includes(c.id)).map((c) => (
           <li key={c.id}>
             <button type="button" className="landing-card" onClick={() => startOnboarding(c.id)}>
               <Portrait character={c} />
@@ -26,6 +26,26 @@ export function LandingPage() {
           </li>
         ))}
       </ul>
+      <section className="upcoming" aria-labelledby="upcoming-title">
+        <h2 id="upcoming-title" className="upcoming-title">
+          준비 중인 작가들
+        </h2>
+        {upcomingAuthors.map((group) => (
+          <div key={group.region} className="upcoming-group">
+            <h3 className="upcoming-region">{group.region}</h3>
+            <ul className="upcoming-list">
+              {group.authors.map((author) => (
+                <li key={author.name} className="upcoming-item">
+                  <span className="upcoming-name">{author.name}</span>
+                  <span className="upcoming-meta">
+                    {author.field}, {author.englishName}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
       <p className="landing-note">
         <AdaptedLabel /> 인물의 말투는 제작진이 지어낸 것이에요. 로그인 없이 시작해요.
       </p>

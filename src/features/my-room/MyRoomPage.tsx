@@ -11,6 +11,8 @@ import '../../room.css';
 import '../../style.css';
 import './theme.css';
 import './my-cards.css';
+import './room-overrides.css';
+import './motion.css';
 
 export function MyRoomPage() {
   const lib = useLibrary(getProgress().nickname);

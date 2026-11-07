@@ -11,7 +11,7 @@ export const readings: Reading[] = [
     title: '미움을 끝내는 법',
     original: 'Na hi verena verāni sammantīdha kudācanaṁ; averena ca sammanti, esa dhammo sanantano.',
     translation: '이 세상에서 미움은 미움으로는 결코 가라앉지 않는다. 미움이 없어야 가라앉는다. 이것은 오래된 법이다.',
-    source: '『담마파다』 쌍품 5게 (팔리어 원문, 제작진 초벌 번역)',
+    source: '『담마파다』 쌍품 5게',
     question: '이 문장에 따르면 미움으로 가라앉힐 수 없는 것은 무엇인가요?',
     options: [
       { id: 'a', text: '미움' },
@@ -29,7 +29,7 @@ export const readings: Reading[] = [
     title: '버거운 날의 한 줄',
     original: 'Aus der Kriegsschule des Lebens. — Was mich nicht umbringt, macht mich stärker.',
     translation: '삶이라는 전쟁 학교에서. 나를 죽이지 않는 것은 나를 더 강하게 만든다.',
-    source: '『우상의 황혼』 「잠언과 화살」 8 (독일어 원문, 제작진 초벌 번역)',
+    source: '『우상의 황혼』 「잠언과 화살」 8',
     question: '이 문장에서 나를 더 강하게 만든다고 한 것은 무엇인가요?',
     options: [
       { id: 'a', text: '남들의 칭찬' },
@@ -48,7 +48,7 @@ export const readings: Reading[] = [
     original:
       'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.',
     translation: '재산이 넉넉한 독신 남자라면 틀림없이 아내가 필요할 것이라는 점은 누구나 인정하는 진리다.',
-    source: '『오만과 편견』 1권 1장, 1813년 초판 전사본 (제작진 초벌 번역)',
+    source: '『오만과 편견』 1권 1장, 1813년 초판 전사본',
     question: '이 문장이 누구나 인정하는 진리라고 말하는 내용은 무엇인가요?',
     options: [
       { id: 'a', text: '가난한 사람은 결혼하지 못한다' },
@@ -66,7 +66,7 @@ export const readings: Reading[] = [
     title: '가장 욕먹은 대목',
     original: '人之性惡，其善者僞也。',
     translation: '사람의 본성은 악하다. 그 선함은 사람이 애써 만든 것이다.',
-    source: '『순자』 「성악」 첫머리 (한문 원문, 제작진 초벌 번역)',
+    source: '『순자』 「성악」 첫머리',
     question: '이 문장에서 사람의 선함은 어디에서 온다고 하나요?',
     options: [
       { id: 'a', text: '사람이 애써 만든 것' },
@@ -84,7 +84,7 @@ export const readings: Reading[] = [
     title: '먼저 움직이는 것',
     original: 'Manopubbaṅgamā dhammā, manoseṭṭhā manomayā;',
     translation: '마음의 일들은 마음이 앞서 이끌고, 마음이 으뜸이며, 마음으로 이루어진다.',
-    source: '『담마파다』 쌍품 1게 앞부분 (팔리어 원문, 제작진 초벌 번역)',
+    source: '『담마파다』 쌍품 1게 앞부분',
     question: '이 문장에서 앞서 이끈다고 한 것은 무엇인가요?',
     options: [
       { id: 'a', text: '재물' },
@@ -102,7 +102,7 @@ export const readings: Reading[] = [
     title: '혼돈의 쓸모',
     original: 'Ich sage euch: man muss noch Chaos in sich haben, um einen tanzenden Stern gebären zu können.',
     translation: '내가 너희에게 말한다. 춤추는 별을 낳으려면 자기 안에 아직 혼돈을 지니고 있어야 한다.',
-    source: '『차라투스트라는 이렇게 말했다』 서문 5절, 차라투스트라의 말 (독일어 원문, 제작진 초벌 번역)',
+    source: '『차라투스트라는 이렇게 말했다』 서문 5절, 차라투스트라의 말',
     question: '춤추는 별을 낳으려면 자기 안에 무엇이 있어야 한다고 하나요?',
     options: [
       { id: 'a', text: '혼돈' },
@@ -120,7 +120,7 @@ export const readings: Reading[] = [
     title: '독서 예찬의 속셈',
     original: 'I declare after all there is no enjoyment like reading!',
     translation: '역시 독서만 한 즐거움은 없다니까요!',
-    source: '『오만과 편견』 1권 11장, 빙리 양의 대사, 1813년 초판 전사본 (제작진 초벌 번역)',
+    source: '『오만과 편견』 1권 11장, 빙리 양의 대사, 1813년 초판 전사본',
     question: '이 대사에서 비할 데 없다고 치켜세운 즐거움은 무엇인가요?',
     options: [
       { id: 'a', text: '무도회' },
@@ -138,7 +138,7 @@ export const readings: Reading[] = [
     title: '배움을 그치지 말라',
     original: '君子曰：學不可以已。靑，取之於藍而靑於藍。',
     translation: '군자가 말했다. 배움은 그쳐서는 안 된다. 푸른빛은 쪽에서 얻지만 쪽보다 더 푸르다.',
-    source: '『순자』 「권학」 첫머리 (한문 원문, 제작진 초벌 번역)',
+    source: '『순자』 「권학」 첫머리',
     question: '이 문장에서 푸른빛은 어디에서 얻는다고 하나요?',
     options: [
       { id: 'a', text: '바다' },

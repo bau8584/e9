@@ -5,6 +5,7 @@ import { readings } from './readings';
 import type { Character, CharacterId, DmSet, QuoteCard, Reading } from './types';
 
 export * from './types';
+export { PLAYABLE_IDS, upcomingAuthors } from './catalog';
 export { cards, REWARD_SCORE } from './cards';
 export { characters } from './characters';
 export { dms } from './dms';
