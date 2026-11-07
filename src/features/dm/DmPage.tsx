@@ -5,6 +5,7 @@ import { getCharacter, getDm } from '../../data';
 import { bonds } from '../../data/bonds';
 import { useBond } from '../../store/bond';
 import { chooseReply, goTo, markDmRead, useSnapshot } from '../../store/store';
+import { AI_CHARACTERS, AiChat, aiChatAvailable } from './AiChat';
 import { prefersReducedMotion, useMessageReveal } from './useMessageReveal';
 import './dm.css';
 
@@ -144,6 +145,14 @@ function DmConversation() {
             </button>
           ))}
         </div>
+      )}
+      {done && aiChatAvailable() && AI_CHARACTERS.includes(character.id) && (
+        <AiChat
+          characterId={character.id}
+          name={character.name}
+          stage={bondStage}
+          context={[...messages.map((m) => `${character.name}: ${m}`), ...(chosen ? [`사용자: ${chosen.text}`, ...chosen.answer.map((m) => `${character.name}: ${m}`)] : [])].join('\n')}
+        />
       )}
     </div>
   );
