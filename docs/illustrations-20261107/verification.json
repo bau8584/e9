@@ -1,0 +1,163 @@
+[
+  {
+    "filename": "portrait-siddhartha.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1610484,
+    "sha256": "8DBB4EC25698AF31D23D1B764D2485B9CF9B945DA6B6CDD066A20C1FF978F605"
+  },
+  {
+    "filename": "portrait-siddhartha-stage1.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1645177,
+    "sha256": "052C683F9AD424AB78816846BAE8F72A438E258F842EAA9A9A265FEA6953BCCD"
+  },
+  {
+    "filename": "portrait-siddhartha-stage2.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1680379,
+    "sha256": "449A8982E3722C0ADB1A820D2B4DC2733E930801B07C9E235001AE6F1B0FEB0F"
+  },
+  {
+    "filename": "portrait-siddhartha-stage3.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1603652,
+    "sha256": "2E339E45BD2F7C37BF01744BF5E39387379780E764F140D5AEBC00D46AE4BE77"
+  },
+  {
+    "filename": "portrait-austen.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1613398,
+    "sha256": "0C0E7EF6C19013DB68084A8275D4FA31D7BF2EF3AF92015E66234BA9B00987E4"
+  },
+  {
+    "filename": "portrait-austen-stage1.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1802848,
+    "sha256": "5BD4EF4F91501D4CA1982AEFAD66DABA77C9675F81775A9B3C03280A86A9EBAA"
+  },
+  {
+    "filename": "portrait-austen-stage2.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1723457,
+    "sha256": "7B5C0B77DD1E649E335CFC69D37D7675D52137C335C3DFA34C1573E1B783D6AC"
+  },
+  {
+    "filename": "portrait-austen-stage3.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1728362,
+    "sha256": "08423FC2B4512E743215C959E07B71FF9F62165C9298272D5699418FF7DB5017"
+  },
+  {
+    "filename": "portrait-nietzsche-stage1.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1687285,
+    "sha256": "1E697680C89DA02F2088C248E0B5FC49B02958ECACBB8B6D51CFE8EC6A2C325F"
+  },
+  {
+    "filename": "portrait-nietzsche-stage2.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1959650,
+    "sha256": "E01392CB41C75057BCAA5975770CEE4FBFA5E838A5A3E10820B755F904F2D6F2"
+  },
+  {
+    "filename": "portrait-nietzsche-stage3.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1930401,
+    "sha256": "1D41669308C514C5D830D90FEE7C20A35920F1E516F7214E8626FB888C42F5B0"
+  },
+  {
+    "filename": "portrait-xunzi.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1581538,
+    "sha256": "B94F0E9314B53AA05732DD4A78322ED5C0C0593D449A1F6FEBE9B7A46AAC1FC6"
+  },
+  {
+    "filename": "portrait-xunzi-stage1.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1723737,
+    "sha256": "5D0A497C75F1BF9C5E3D5AC9F4E27DED7D59C7445BF3F5A4F770A4F5867BF4D4"
+  },
+  {
+    "filename": "portrait-xunzi-stage2.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1737168,
+    "sha256": "B9EBFE6A6E963DC3637CC7AB34366D027588553053F340AD1945F0199B6EF62C"
+  },
+  {
+    "filename": "portrait-xunzi-stage3.png",
+    "width": 800,
+    "height": 1000,
+    "bytes": 1654352,
+    "sha256": "588E2597E4710A8FA5528C69C78A9E6F45D5D5B91C961111723DC4794A32B35B"
+  },
+  {
+    "filename": "card-siddhartha-common.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 875956,
+    "sha256": "B99D714EA09067EB6C944E9BE7884E72FED87FE642ECAC00DB6E5E78D72F255D"
+  },
+  {
+    "filename": "card-siddhartha-rare.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 1041368,
+    "sha256": "6E81D64A853E43E706C432D14E9DB15616FD9A66BB905CF4FC4373580A19632D"
+  },
+  {
+    "filename": "card-nietzsche-common.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 887699,
+    "sha256": "E1BC28645E387730122982F1C94007D595D64600DAB208CAC3785352E99825E4"
+  },
+  {
+    "filename": "card-nietzsche-rare.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 962929,
+    "sha256": "50C472627137EC791994126C57EA42E6708772DFF37D21A3EDD191CBA4E88799"
+  },
+  {
+    "filename": "card-austen-common.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 926771,
+    "sha256": "93D2297584C65441B7D2C9A3F76E3F30627CEB4F8C33A4441265DE4E71AB5786"
+  },
+  {
+    "filename": "card-austen-rare.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 1007330,
+    "sha256": "F049DB7E4CFA1FB266240D53EC1706402E4772DAB1661741B6F9F9A4075DC8A0"
+  },
+  {
+    "filename": "card-xunzi-common.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 913806,
+    "sha256": "90DFBD2DC624EACCF65AFF6F075FB5F52338924B86AC3C138BD6898E6EE4E775"
+  },
+  {
+    "filename": "card-xunzi-rare.png",
+    "width": 960,
+    "height": 400,
+    "bytes": 1066978,
+    "sha256": "DEF12605FD889916AADFE148DFEE611A41B78381BF85AE5487AAC66997DE4CEC"
+  }
+]
