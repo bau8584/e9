@@ -1,0 +1,59 @@
+.taste-dialog { width:min(760px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:0; border:1px solid #cfb8dc; border-radius:15px; color:#302239; background:#fcf8f1; font-family:var(--sans); overflow:auto; }
+.taste-dialog::backdrop { background:rgba(31,16,38,.65); }
+.taste-dialog button { font:inherit; cursor:pointer; }
+.taste-dialog-head { padding:17px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e4d7e7; }
+.taste-dialog-head>span { display:flex; align-items:center; gap:9px; font-size:11px; letter-spacing:.12em; color:#805393; }
+.taste-icon { display:grid; place-items:center; min-width:44px; min-height:44px; border:0; background:none; color:#6e4a80; }
+.taste-tabs { display:flex; justify-content:center; gap:24px; border-bottom:1px solid #e5dbe6; }
+.taste-tabs button { min-height:49px; border:0; border-bottom:2px solid transparent; background:none; font-size:12px; color:#968199; }
+.taste-tabs button[aria-pressed='true'] { color:#703594; border-bottom-color:#703594; font-weight:700; }
+.taste-question { padding:30px 38px 24px; }
+.taste-step { display:flex; justify-content:space-between; font-size:11px; color:#88768f; }
+.taste-step>span:last-child { color:#7838a3; font-weight:700; }
+.taste-step small { color:#ad9bb3; }
+.taste-question progress { appearance:none; display:block; height:4px; width:100%; border:0; margin:12px 0 38px; background:#e8daee; border-radius:3px; }
+.taste-question progress::-webkit-progress-bar { background:#e8daee; border-radius:3px; }
+.taste-question progress::-webkit-progress-value { background:#8c4fb5; border-radius:3px; }
+.taste-question progress::-moz-progress-bar { background:#8c4fb5; }
+.taste-eyebrow { font-size:11px; color:#9c7cae; letter-spacing:.04em; margin:0 0 10px; }
+.taste-question h2 { font-size:26px; line-height:1.65; letter-spacing:-.8px; margin:0 0 30px; word-break:keep-all; }
+.taste-question h2:focus,.taste-result h2:focus,.taste-directory h2:focus { outline:none; }
+.taste-options { display:flex; flex-direction:column; gap:13px; }
+.taste-options button { width:100%; padding:18px; display:flex; align-items:center; gap:15px; min-height:76px; border:1px solid #d9cadd; border-radius:9px; background:#fffaf8; text-align:left; font-size:14px; color:#483353; word-break:keep-all; }
+.taste-options button>span { display:grid; place-items:center; border:1px solid #d9c4e3; border-radius:6px; width:30px; height:30px; flex:none; background:#f2e6f7; color:#9667ac; font:14px Georgia,serif; }
+.taste-options button>svg { margin-left:auto; flex:none; color:#a982ba; }
+.taste-options button:hover,.taste-options button[aria-pressed='true'] { background:#f0e0f7; border-color:#a171ba; }
+.taste-question-footer { margin-top:26px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.taste-question-footer button { display:flex; gap:6px; align-items:center; min-height:44px; font-size:11px; border:0; background:none; color:#8a6b9a; }
+.taste-question-footer button:disabled { opacity:.35; cursor:default; }
+.taste-question-footer>span { color:#aa98ad; font-size:10px; text-align:right; }
+.taste-fineprint { padding:18px 24px 22px; text-align:center; font-size:10px; color:#a08da6; line-height:1.8; border-top:1px solid #eadfec; }
+.taste-result { padding:28px 42px 12px; text-align:center; }
+.taste-code { display:inline-block; font:15px Georgia,serif; letter-spacing:.15em; padding:7px 16px; color:#8350a3; background:#eedeef; border:1px solid #d8c3e4; border-radius:5px; margin:5px 0 11px; }
+.taste-result h2 { margin:0 0 14px; font-size:29px; letter-spacing:-1px; word-break:keep-all; }
+.taste-tags { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+.taste-tags span { font-size:9px; border:1px solid #ddcde3; color:#937b9d; padding:3px 9px; border-radius:20px; }
+.taste-description { margin:18px auto; color:#84718d; font-size:13px; line-height:1.9; max-width:500px; word-break:keep-all; }
+.taste-philosopher { padding:20px; background:#f0e4f5; border:1px solid #e5d5ed; border-radius:9px; }
+.taste-philosopher>span { font-size:10px; color:#9b79ae; }
+.taste-philosopher h3 { font:600 27px var(--serif); margin:7px 0; color:#653584; }
+.taste-philosopher p { margin:0; font-size:12px; color:#8e729e; line-height:1.8; }
+.taste-connection { padding:21px 0 10px; }
+.taste-connection strong { font-size:14px; color:#714788; }
+.taste-connection p { font-size:11px; line-height:1.8; color:#9c85a5; }
+.taste-connection blockquote { margin:12px 0; padding:11px; border-left:2px solid #b28cc8; background:#f5edf8; font-size:12px; color:#8b629f; }
+.taste-primary { display:flex; align-items:center; justify-content:center; gap:12px; width:100%; min-height:48px; background:#7736a4; border:0; color:white; border-radius:7px; font-size:13px!important; }
+.taste-other { min-height:44px; background:none; border:0; font-size:11px!important; color:#987da6; text-decoration:underline; text-underline-offset:4px; }
+.taste-result-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:15px; }
+.taste-result-actions button { display:flex; align-items:center; gap:6px; min-height:44px; background:none; border:0; color:#967da4; font-size:10px; }
+.taste-result>p[role='status'] { font-size:11px; color:#7c5190; }
+.taste-directory { padding:25px; }
+.taste-directory h2 { margin:0; font-size:22px; letter-spacing:-.7px; }
+.taste-directory>p { font-size:12px; color:#96819f; line-height:1.8; }
+.taste-type-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:20px; }
+.taste-type-grid button { padding:16px; text-align:left; border:1px solid #e0d0e5; border-radius:9px; background:#fffaf8; color:#6b467e; }
+.taste-type-grid button:hover { background:#f0e2f5; border-color:#ac83c0; }
+.taste-type-number { display:block; font-size:9px; color:#b49bbf; letter-spacing:.08em; }
+.taste-type-grid strong { display:block; margin:7px 0 12px; font-size:13px; word-break:keep-all; }
+.taste-type-grid button>span:last-child { display:flex; align-items:center; justify-content:space-between; font-size:11px; color:#9d7daf; }
+@media(max-width:600px) { .taste-dialog { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); border-radius:11px; }.taste-dialog-head { padding:12px 15px; }.taste-dialog-head>span { font-size:9px; }.taste-question { padding:23px 20px 15px; }.taste-question h2 { font-size:22px; }.taste-options button { padding:14px 12px; font-size:12px; gap:10px; }.taste-question progress { margin-bottom:27px; }.taste-question-footer>span { font-size:9px; }.taste-result { padding:23px 20px 10px; }.taste-result h2 { font-size:25px; }.taste-directory { padding:21px 16px; }.taste-type-grid { gap:8px; }.taste-type-grid button { padding:12px; }.taste-type-grid strong { font-size:12px; }.taste-fineprint { font-size:9px; padding:15px; } }
