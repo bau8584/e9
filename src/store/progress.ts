@@ -5,8 +5,8 @@ import {
   getCard,
   getCardsOf,
   getDm,
+  getMissionCount,
   getReading,
-  RARE_CHANCE,
   REWARD_SCORE,
   type CharacterId,
 } from '../data';
@@ -19,6 +19,8 @@ export interface Progress {
   nickname: string;
   favoriteId: CharacterId | null;
   screen: Screen;
+  /** 지금 하는 미션 순서(0부터). 값이 없던 옛 기록은 첫 미션으로 읽는다. */
+  missionIndex: number;
   stage: Stage;
   dmRead: boolean;
   dmChoiceId: string | null;
@@ -36,6 +38,7 @@ export const createInitial = (): Progress => ({
   nickname: '',
   favoriteId: null,
   screen: 'landing',
+  missionIndex: 0,
   stage: 'dm',
   dmRead: false,
   dmChoiceId: null,
@@ -55,13 +58,13 @@ export function completeOnboarding(p: Progress, rawNickname: string, favoriteId:
 
 export function chooseReply(p: Progress, replyId: string): Progress {
   if (!p.favoriteId || p.dmChoiceId) return p;
-  if (!getDm(p.favoriteId).replies.some((r) => r.id === replyId)) return p;
+  if (!getDm(p.favoriteId, p.missionIndex).replies.some((r) => r.id === replyId)) return p;
   return { ...p, dmRead: true, dmChoiceId: replyId, stage: p.stage === 'dm' ? 'reading' : p.stage };
 }
 
 export function answerQuiz(p: Progress, optionId: string): { next: Progress; correct: boolean } {
   if (!p.favoriteId || p.stage !== 'reading') return { next: p, correct: false };
-  const correct = getReading(p.favoriteId).correctOptionId === optionId;
+  const correct = getReading(p.favoriteId, p.missionIndex).correctOptionId === optionId;
   return {
     correct,
     next: correct
@@ -70,21 +73,49 @@ export function answerQuiz(p: Progress, optionId: string): { next: Progress; cor
   };
 }
 
-/** 카드 뽑기. 같은 미션의 보상은 몇 번을 눌러도 한 번만 들어온다. */
-export function drawCard(p: Progress, random: () => number = Math.random): Progress {
+/**
+ * 카드 뽑기. 미션마다 받는 카드가 정해져 있어 운에 따라 못 얻는 일이 없다.
+ * 같은 미션의 보상은 몇 번을 눌러도 한 번만 들어온다.
+ * 옛 뽑기로 희귀 카드를 먼저 받은 사람은 둘째 미션에서 아직 없는 카드를 받는다.
+ */
+export function drawCard(p: Progress): Progress {
   if (!p.favoriteId || p.stage !== 'draw') return p;
-  const missionId = getReading(p.favoriteId).id;
+  const reading = getReading(p.favoriteId, p.missionIndex);
+  const missionId = reading.id;
   if (p.rewardedMissions.includes(missionId)) return { ...p, stage: 'done' };
-  const owned = getCardsOf(p.favoriteId);
-  const rarity = random() < RARE_CHANCE ? '희귀' : '일반';
-  const card = owned.find((c) => c.rarity === rarity) ?? owned[0];
+  const cardId = p.cards.includes(reading.cardId)
+    ? getCardsOf(p.favoriteId).find((c) => !p.cards.includes(c.id))?.id
+    : reading.cardId;
   return {
     ...p,
     stage: 'done',
-    cards: p.cards.includes(card.id) ? p.cards : [...p.cards, card.id],
+    cards: cardId ? [...p.cards, cardId] : p.cards,
     score: p.score + REWARD_SCORE,
     rewardedMissions: [...p.rewardedMissions, missionId],
   };
+}
+
+/** 끝낸 미션 다음에 미션이 남아 있으면 다음 DM부터 다시 시작한다. */
+export function advanceMission(p: Progress): Progress {
+  if (!p.favoriteId || p.stage !== 'done' || p.missionIndex + 1 >= getMissionCount(p.favoriteId)) return p;
+  return {
+    ...p,
+    missionIndex: p.missionIndex + 1,
+    stage: 'dm',
+    dmRead: false,
+    dmChoiceId: null,
+    lastWrongOptionId: null,
+  };
+}
+
+/** 인물의 마지막 미션까지 끝냈는지 */
+export const isSeasonComplete = (p: Progress): boolean =>
+  Boolean(p.favoriteId) && p.stage === 'done' && p.missionIndex + 1 >= getMissionCount(p.favoriteId as CharacterId);
+
+/** 화면 이동 규칙. 홈이나 DM으로 가면 끝낸 미션 다음의 새 DM이 열린다. */
+export function moveTo(p: Progress, screen: Screen): Progress {
+  const moved = { ...p, screen };
+  return screen === 'home' || screen === 'dm' ? advanceMission(moved) : moved;
 }
 
 export interface RankRow {
@@ -126,14 +157,23 @@ export function sanitize(raw: unknown): Progress {
   const onboarded = Boolean(favoriteId && nickname);
   const screen = SCREENS.includes(r.screen as Screen) ? (r.screen as Screen) : init.screen;
   const needsOnboarding = screen === 'badge' || screen === 'home' || screen === 'dm' || screen === 'reading' || screen === 'myroom';
-  return {
+  const missionIndex =
+    favoriteId && Number.isInteger(r.missionIndex) && (r.missionIndex as number) >= 0 && (r.missionIndex as number) < getMissionCount(favoriteId)
+      ? (r.missionIndex as number)
+      : 0;
+  const dmChoiceId =
+    favoriteId && getDm(favoriteId, missionIndex).replies.some((reply) => reply.id === r.dmChoiceId)
+      ? (r.dmChoiceId as string)
+      : null;
+  const clean: Progress = {
     version: 1,
     nickname,
     favoriteId,
     screen: !onboarded && needsOnboarding ? 'landing' : screen,
+    missionIndex,
     stage: onboarded && STAGES.includes(r.stage as Stage) ? (r.stage as Stage) : 'dm',
     dmRead: r.dmRead === true,
-    dmChoiceId: typeof r.dmChoiceId === 'string' ? r.dmChoiceId : null,
+    dmChoiceId,
     lastWrongOptionId: typeof r.lastWrongOptionId === 'string' ? r.lastWrongOptionId : null,
     cards: Array.isArray(r.cards) ? r.cards.filter((id) => typeof id === 'string' && getCard(id)) : [],
     score: typeof r.score === 'number' && Number.isFinite(r.score) && r.score >= 0 ? r.score : 0,
@@ -141,4 +181,6 @@ export function sanitize(raw: unknown): Progress {
       ? r.rewardedMissions.filter((id) => typeof id === 'string')
       : [],
   };
+  // 미션이 1개이던 시절에 끝낸 기록은 홈이나 DM에 있으면 바로 다음 DM을 연다.
+  return clean.screen === 'home' || clean.screen === 'dm' ? advanceMission(clean) : clean;
 }

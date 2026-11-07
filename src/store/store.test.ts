@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { characters, getDm, getReading, REWARD_SCORE, cards, dms, readings } from '../data';
+import { characters, getCard, getDm, getMissionCount, getReading, REWARD_SCORE, cards, dms, readings, type CharacterId } from '../data';
 import { getCards, getFavorite, getNickname, getScore, resetAll } from '../features/my-room/myRoomData';
-import { cleanNickname, computeRanking, rankOf, sanitize, createInitial } from './progress';
+import { cleanNickname, computeRanking, isSeasonComplete, rankOf, sanitize, createInitial } from './progress';
 import * as store from './store';
 
 const reachDraw = () => {
@@ -49,24 +49,24 @@ describe('문제와 보상', () => {
   });
   it('정답 뒤 뽑기는 20점과 카드 한 장을 준다', () => {
     reachDraw();
-    store.drawCard(() => 0.99);
+    store.drawCard();
     expect(getScore()).toBe(REWARD_SCORE);
     expect(getCards().map((c) => c.rarity)).toEqual(['일반']);
   });
   it('뽑기를 여러 번 눌러도 보상은 한 번만 들어온다', () => {
     reachDraw();
-    store.drawCard(() => 0);
-    store.drawCard(() => 0);
+    store.drawCard();
+    store.drawCard();
     expect(getScore()).toBe(REWARD_SCORE);
     expect(getCards()).toHaveLength(1);
-    expect(getCards()[0].rarity).toBe('희귀');
+    expect(getCards()[0].rarity).toBe('일반');
   });
 });
 
 describe('복원과 저장 실패', () => {
   it('다시 읽어도 최애, 단계, 카드, 점수가 그대로다', () => {
     reachDraw();
-    store.drawCard(() => 0.99);
+    store.drawCard();
     store.goTo('reading');
     store.reloadFromStorage();
     const p = store.getProgress();
@@ -114,13 +114,115 @@ describe('순위와 콘텐츠', () => {
     expect(computeRanking(id, 0)).toHaveLength(4);
   });
   it.each(characters.map((c) => c.id))('%s 콘텐츠가 빠짐없이 있다', (id) => {
-    expect(dms.filter((d) => d.characterId === id)).toHaveLength(1);
-    const dm = getDm(id);
-    expect(dm.replies.length).toBeGreaterThanOrEqual(2);
-    expect(dm.replies.length).toBeLessThanOrEqual(3);
-    expect(readings.filter((r) => r.characterId === id)).toHaveLength(1);
-    const reading = getReading(id);
-    expect(reading.options.some((o) => o.id === reading.correctOptionId)).toBe(true);
+    expect(dms.filter((d) => d.characterId === id)).toHaveLength(2);
+    expect(readings.filter((r) => r.characterId === id)).toHaveLength(2);
+    [0, 1].forEach((mission) => {
+      const dm = getDm(id, mission);
+      expect(dm.replies.length).toBeGreaterThanOrEqual(2);
+      expect(dm.replies.length).toBeLessThanOrEqual(3);
+      const reading = getReading(id, mission);
+      expect(reading.options.some((o) => o.id === reading.correctOptionId)).toBe(true);
+      expect(reading.source).toContain('확인 필요');
+      expect(getCard(reading.cardId)?.characterId).toBe(id);
+      expect(getCard(reading.cardId)?.rarity).toBe(mission === 0 ? '일반' : '희귀');
+    });
     expect(cards.filter((c) => c.characterId === id).map((c) => c.rarity).sort()).toEqual(['일반', '희귀'].sort());
+  });
+});
+
+const playMission = (id: CharacterId, mission: number) => {
+  store.chooseReply(getDm(id, mission).replies[0].id);
+  store.answerQuiz(getReading(id, mission).correctOptionId);
+  store.drawCard();
+};
+
+describe('미션 2개', () => {
+  it.each(characters.map((c) => c.id))('%s 미션 2개로 일반, 희귀 카드와 40점을 얻는다', (id) => {
+    store.completeOnboarding('덕구', id);
+    playMission(id, 0);
+    expect(store.getProgress().stage).toBe('done');
+    store.goTo('home');
+    expect(store.getProgress()).toMatchObject({ missionIndex: 1, stage: 'dm', dmChoiceId: null, dmRead: false });
+    playMission(id, 1);
+    store.goTo('home');
+    expect(getCards().map((c) => c.rarity)).toEqual(['일반', '희귀']);
+    expect(getScore()).toBe(REWARD_SCORE * 2);
+    expect(store.getProgress().missionIndex).toBe(getMissionCount(id) - 1);
+    expect(isSeasonComplete(store.getProgress())).toBe(true);
+  });
+  it('시즌을 끝낸 뒤 다시 눌러도 점수와 카드가 늘지 않는다', () => {
+    store.completeOnboarding('덕구', 'xunzi');
+    playMission('xunzi', 0);
+    store.goTo('home');
+    playMission('xunzi', 1);
+    store.goTo('home');
+    playMission('xunzi', 1);
+    store.drawCard();
+    expect(getScore()).toBe(40);
+    expect(getCards()).toHaveLength(2);
+  });
+  it('첫 미션 뒤 결과 화면에 머물면 새로고침해도 다음 미션으로 넘어가지 않는다', () => {
+    reachDraw();
+    store.goTo('reading');
+    store.drawCard();
+    store.reloadFromStorage();
+    expect(store.getProgress()).toMatchObject({ missionIndex: 0, stage: 'done', screen: 'reading' });
+  });
+  it('둘째 미션 중간에 새로고침해도 이어진다', () => {
+    store.completeOnboarding('덕구', 'austen');
+    playMission('austen', 0);
+    store.goTo('dm');
+    const reply = getDm('austen', 1).replies[1].id;
+    store.chooseReply(reply);
+    store.reloadFromStorage();
+    expect(store.getProgress()).toMatchObject({ missionIndex: 1, stage: 'reading', dmChoiceId: reply, score: 20 });
+  });
+});
+
+describe('미션 1개 시절 기록 옮기기', () => {
+  const legacy = (over: object) => ({
+    version: 1,
+    nickname: '덕구',
+    favoriteId: 'nietzsche',
+    screen: 'home',
+    stage: 'done',
+    dmRead: true,
+    dmChoiceId: 'nietzsche-a',
+    lastWrongOptionId: null,
+    cards: ['card-nietzsche-common'],
+    score: 20,
+    rewardedMissions: ['reading-nietzsche-1'],
+    ...over,
+  });
+  it('중간까지 한 기록은 첫 미션의 그 자리에서 이어진다', () => {
+    expect(sanitize(legacy({ stage: 'reading', cards: [], score: 0, rewardedMissions: [] }))).toMatchObject({
+      missionIndex: 0,
+      stage: 'reading',
+      dmChoiceId: 'nietzsche-a',
+    });
+  });
+  it('끝낸 기록은 카드와 점수를 지키고 다음 DM을 연다', () => {
+    expect(sanitize(legacy({}))).toMatchObject({
+      missionIndex: 1,
+      stage: 'dm',
+      dmChoiceId: null,
+      score: 20,
+      cards: ['card-nietzsche-common'],
+    });
+  });
+  it('끝낸 결과 화면에서 저장됐으면 결과를 그대로 보여 준다', () => {
+    expect(sanitize(legacy({ screen: 'reading' }))).toMatchObject({ missionIndex: 0, stage: 'done', screen: 'reading' });
+  });
+  it('옛 뽑기로 희귀를 먼저 받았으면 둘째 미션에서 일반을 받아 2장, 40점이 된다', () => {
+    window.localStorage.setItem(store.STORAGE_KEY, JSON.stringify(legacy({ cards: ['card-nietzsche-rare'] })));
+    store.reloadFromStorage();
+    playMission('nietzsche', 1);
+    expect(getCards().map((c) => c.rarity).sort()).toEqual(['일반', '희귀'].sort());
+    expect(getScore()).toBe(40);
+  });
+  it('이상한 미션 순서 값은 첫 미션으로 읽는다', () => {
+    expect(sanitize(legacy({ stage: 'dm', missionIndex: 99 })).missionIndex).toBe(0);
+    expect(sanitize(legacy({ stage: 'dm', missionIndex: -1 })).missionIndex).toBe(0);
+    expect(sanitize(legacy({ stage: 'dm', missionIndex: '1' })).missionIndex).toBe(0);
   });
 });

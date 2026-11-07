@@ -1,8 +1,5 @@
 import type { QuoteCard } from './types';
 
-/** 희귀 카드가 나올 확률. 0.3 = 30% */
-export const RARE_CHANCE = 0.3;
-
 /** 미션 하나를 끝내면 오르는 점수 */
 export const REWARD_SCORE = 20;
 

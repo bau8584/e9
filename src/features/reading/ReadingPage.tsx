@@ -25,7 +25,7 @@ export function ReadingPage() {
   const [justCorrect, setJustCorrect] = useState(false);
   if (!progress.favoriteId) return null;
   const character = getCharacter(progress.favoriteId);
-  const reading = getReading(character.id);
+  const reading = getReading(character.id, progress.missionIndex);
 
   if (progress.stage === 'dm') {
     return (

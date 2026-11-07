@@ -1,7 +1,7 @@
 import { Portrait } from '../../components/Portrait';
 import { RankingList } from '../../components/RankingList';
-import { getCharacter, getDm, getReading } from '../../data';
-import type { Stage } from '../../store/progress';
+import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
+import { isSeasonComplete, type Stage } from '../../store/progress';
 import { goTo, useSnapshot } from '../../store/store';
 import './home.css';
 
@@ -15,8 +15,9 @@ export function HomePage() {
   const { progress } = useSnapshot();
   if (!progress.favoriteId) return null;
   const character = getCharacter(progress.favoriteId);
-  const dm = getDm(character.id);
-  const reading = getReading(character.id);
+  const dm = getDm(character.id, progress.missionIndex);
+  const reading = getReading(character.id, progress.missionIndex);
+  const missionCount = getMissionCount(character.id);
   const action = progress.stage === 'done' ? null : missionAction[progress.stage];
 
   return (
@@ -38,20 +39,29 @@ export function HomePage() {
         <span className="dm-banner-text">{dm.preview}</span>
       </button>
 
-      <section className="panel">
-        <h2 className="section-title">오늘의 읽기 미션</h2>
-        <p className="mission-title">{reading.title}</p>
-        {action ? (
-          <>
-            <p className="mission-text">{action.text}</p>
-            <button type="button" className="btn btn-primary btn-block" onClick={() => goTo(action.screen)}>
-              {action.label}
-            </button>
-          </>
-        ) : (
-          <p className="mission-text">오늘 미션 완료. 다음 DM과 원문은 준비 중이에요.</p>
-        )}
-      </section>
+      {isSeasonComplete(progress) ? (
+        <section className="panel" data-testid="season-complete">
+          <h2 className="section-title">이번 시즌 완료</h2>
+          <p className="mission-text">
+            {character.name}의 미션 {missionCount}개를 모두 끝냈어요. 다음 시즌의 DM과 원문은 준비 중이에요.
+          </p>
+        </section>
+      ) : (
+        <section className="panel">
+          <h2 className="section-title">
+            오늘의 읽기 미션 {progress.missionIndex + 1}/{missionCount}
+          </h2>
+          <p className="mission-title">{reading.title}</p>
+          {action && (
+            <>
+              <p className="mission-text">{action.text}</p>
+              <button type="button" className="btn btn-primary btn-block" onClick={() => goTo(action.screen)}>
+                {action.label}
+              </button>
+            </>
+          )}
+        </section>
+      )}
 
       <RankingList favoriteId={character.id} score={progress.score} />
     </div>

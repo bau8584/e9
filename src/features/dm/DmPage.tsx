@@ -10,7 +10,7 @@ export function DmPage() {
   useEffect(markDmRead, []);
   if (!progress.favoriteId) return null;
   const character = getCharacter(progress.favoriteId);
-  const dm = getDm(character.id);
+  const dm = getDm(character.id, progress.missionIndex);
   const chosen = dm.replies.find((r) => r.id === progress.dmChoiceId);
 
   return (

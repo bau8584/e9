@@ -62,7 +62,7 @@ export function retrySave() {
 }
 
 export const goTo = (screen: Screen) => {
-  if (snapshot.progress.screen !== screen) commit({ ...snapshot.progress, screen });
+  if (snapshot.progress.screen !== screen) commit(rules.moveTo(snapshot.progress, screen));
 };
 
 export const startOnboarding = (favoriteId?: CharacterId) =>
@@ -97,7 +97,8 @@ export function answerQuiz(optionId: string): boolean {
 
 export const clearWrongAnswer = () => commit({ ...snapshot.progress, lastWrongOptionId: null });
 
-export const drawCard = (random?: () => number) => commit(rules.drawCard(snapshot.progress, random));
+/** 받는 카드는 미션마다 정해져 있다. 인자는 옛 확률 뽑기 시절 호출을 깨지 않으려 받기만 하고 쓰지 않는다. */
+export const drawCard = (_unused?: unknown) => commit(rules.drawCard(snapshot.progress));
 
 /** 모든 기록을 지우고 첫 화면으로. 지우기에 실패하면 false를 돌려준다. */
 export function resetProgress(): boolean {

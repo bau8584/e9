@@ -40,6 +40,8 @@ export interface QuizOption {
 export interface Reading {
   id: string;
   characterId: CharacterId;
+  /** 이 미션을 끝내면 받는 카드. 첫 미션은 일반, 둘째 미션은 희귀 */
+  cardId: string;
   /** 미션 제목 */
   title: string;
   /** 원문(원어) 짧게 */
