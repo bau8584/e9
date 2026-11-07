@@ -73,7 +73,7 @@ export function AiChat({ characterId, name, stage, context }: { characterId: str
   return (
     <section className="ai-chat" aria-label={`${name}와 자유 대화`}>
       <p className="ai-chat-label">직접 대화하기</p>
-      <p className="ai-chat-notice">실제 인물이 아니라 AI가 재구성한 캐릭터예요. 보낸 말은 답을 만들기 위해 AI 회사(Anthropic)로 전달되고 힙독 서버에는 저장하지 않아요. 이름이나 연락처 같은 개인정보는 적지 말아 주세요. 대화는 탭을 닫으면 사라져요.</p>
+      <p className="ai-chat-notice">실제 인물이 아니라 AI가 재구성한 캐릭터예요. 보낸 말은 답을 만들기 위해 처리되며 힙독 서버에는 저장하지 않아요. 이름이나 연락처 같은 개인정보는 적지 말아 주세요. 대화는 탭을 닫으면 사라져요.</p>
       <div className="ai-chat-thread" aria-live="polite">
         {turns.map((turn, index) => (
           <div key={index} className={turn.role === 'user' ? 'ai-chat-row is-me' : 'ai-chat-row'}>
