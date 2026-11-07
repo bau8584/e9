@@ -123,7 +123,7 @@ describe('순위와 콘텐츠', () => {
       const reading = getReading(id, mission);
       expect(reading.options.some((o) => o.id === reading.correctOptionId)).toBe(true);
       expect(reading.source).not.toMatch(/추정|확인 필요/);
-      expect(reading.source).toContain('제작진 초벌 번역');
+      expect(reading.source).not.toMatch(/초벌|검수/);
       expect(getCard(reading.cardId)?.source).toBe(reading.source);
       expect(reading.translation).toContain(reading.hintPassage);
       expect(getCard(reading.cardId)?.characterId).toBe(id);

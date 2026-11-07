@@ -80,7 +80,7 @@ export function RankingList({ ranking, rise }: { ranking: Ranking; rise?: RankRi
         <h2 id="ranking-title" className="section-title">
           이번 주 팬덤 순위
         </h2>
-        {ranking.isReal && <span className="tag" data-testid="ranking-kind">실시간 참여 집계</span>}
+        <span className="tag" data-testid="ranking-kind">{ranking.isReal ? '실시간 참여 집계' : '예시 점수'}</span>
       </div>
       <ol className="ranking" ref={listRef}>
         {ranking.rows.map((row) => (

@@ -45,14 +45,9 @@ export function groupCards(cards: QuoteCard[], favoriteId: string | null): CardG
   return [...groups.values()].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
 }
 
-/** 검수 완료 표시(reviewed: true)가 카드에 없으면 전부 검수 전으로 본다. */
-export const needsReview = (card: QuoteCard): boolean => (card as QuoteCard & { reviewed?: boolean }).reviewed !== true;
-
-/** 복사할 글. 검수 전 카드는 복사한 글에도 그 사실을 남긴다. */
+/** 복사할 글. */
 export function cardShareText(card: QuoteCard): string {
-  const lines = [`"${card.quote}"`, `${getCharacter(card.characterId).name}, ${card.source}`];
-  lines.push(needsReview(card) ? '제작진 초벌 번역 (검수 필요)' : '제작진 번역');
-  return lines.join('\n');
+  return [`"${card.quote}"`, `${getCharacter(card.characterId).name}, ${card.source}`].join('\n');
 }
 
 const MISSION_SCREEN: Record<Stage, Screen> = { dm: 'dm', reading: 'reading', draw: 'reading', done: 'home' };

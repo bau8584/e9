@@ -6,7 +6,7 @@ import { cards as allCards, getDm, getReading } from '../../data';
 import { STORAGE_KEY as LIBRARY_KEY } from '../../library.mjs';
 import * as store from '../../store/store';
 import { MyRoomPage } from './MyRoomPage';
-import { cardShareText, groupCards, namesDiffer, needsReview } from './myRoomData';
+import { cardShareText, groupCards, namesDiffer } from './myRoomData';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) { this.setAttribute('open', ''); };
@@ -43,13 +43,11 @@ describe('카드 묶기', () => {
     expect(groups[0].isFavorite).toBe(true);
     expect(groupCards([], 'nietzsche')).toEqual([]);
   });
-  it('복사 글에 검수 전 표시가 남고, 검수 완료 카드에서만 빠진다', () => {
+  it('복사 글에 문장과 출처가 들어가고 미완성 표시는 없다', () => {
     const card = nietzsche[0];
-    expect(needsReview(card)).toBe(true);
     expect(cardShareText(card)).toContain(card.quote);
     expect(cardShareText(card)).toContain(card.source);
-    expect(cardShareText(card)).toContain('검수 필요');
-    expect(cardShareText({ ...card, reviewed: true } as typeof card)).not.toContain('검수 필요');
+    expect(cardShareText(card)).not.toMatch(/검수|초벌/);
   });
 });
 
@@ -68,7 +66,7 @@ describe('내 문장 카드 구역', () => {
     const text = host.querySelector('.my-cards')!.textContent!;
     expect(text).toContain('니체 팬');
     expect(text).toContain(`${store.getProgress().score}점`);
-    expect(text).toContain('검수 필요');
+    expect(text).not.toContain('검수 필요');
     expect(text).not.toContain('아직 뽑은 카드');
   });
 });
