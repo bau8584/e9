@@ -1,3 +1,4 @@
+import { NietzscheCards } from './NietzscheCards';
 import { useEffect, useRef, useState } from 'react';
 import packPage from './philosopher-pack.html?raw';
 import { Portrait } from '../../components/Portrait';
@@ -144,6 +145,7 @@ export function HomePage() {
         </form>
         <iframe title="사유의 초상 카드팩" srcDoc={packPage} loading="lazy" style={{ display: 'block', border: 0, width: '100%', height: 'min(76dvh, 710px)' }} />
       </dialog>
+      <NietzscheCards />
       <RankingList ranking={ranking} />
     </div>
   );
