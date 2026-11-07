@@ -1,3 +1,4 @@
+import { NietzscheCards } from '../home/NietzscheCards';
 import { useEffect, useRef, useState } from 'react';
 import { AdaptedLabel } from '../../components/Labels';
 import { Portrait } from '../../components/Portrait';
@@ -100,6 +101,7 @@ function DmConversation() {
         )}
         <div ref={endRef} />
       </div>
+      {done && chosen && character.id === 'nietzsche' && <NietzscheCards />}
       {!done ? (
         <button
           type="button"
