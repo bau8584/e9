@@ -14,11 +14,18 @@
 .landing-line { margin-top: 8px; font-size: .95rem; line-height: 1.45; word-break: keep-all; overflow-wrap: anywhere; }
 .landing-card:hover { background: var(--purple); }
 .landing-note { margin: 18px 0 0; font-size: .82rem; color: var(--muted); }
+.upcoming { margin-top: 32px; }
+.upcoming-title { margin: 0; font-family: var(--serif); font-size: 1.25rem; }
+.upcoming-group { margin-top: 18px; }
+.upcoming-region { margin: 0 0 8px; font-size: .85rem; color: var(--purple); }
+.upcoming-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+.upcoming-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line, rgba(0, 0, 0, .12)); border-radius: var(--r-card); min-width: 0; }
+.upcoming-name { font-weight: 700; word-break: keep-all; }
+.upcoming-meta { font-size: .75rem; color: var(--muted); overflow-wrap: anywhere; }
 @media (min-width: 720px) {
   .landing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 900px) {
-  .landing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .landing-card { grid-template-columns: 1fr; height: 100%; align-content: start; }
   .landing-card .portrait { height: 220px; }
 }
