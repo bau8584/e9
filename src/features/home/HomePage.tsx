@@ -1,6 +1,5 @@
-import { NietzscheCards } from './NietzscheCards';
-import { useEffect, useRef, useState } from 'react';
-import packPage from './philosopher-pack.html?raw';
+import { useState } from 'react';
+import { CharacterSwitcher } from '../../components/CharacterSwitcher';
 import { Portrait } from '../../components/Portrait';
 import { RankingList, useRanking } from '../../components/RankingList';
 import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
@@ -12,15 +11,6 @@ import { BondMoment } from './BondMoment';
 import { BondPanel } from './BondPanel';
 import './home.css';
 
-const portraitKey = 'hipdok.philosopher.cards.v1';
-const catalog: {name:string; theme:string; image:string}[] = JSON.parse(packPage.split('<script id="portrait-data" type="application/json">')[1].split('</script>')[0]);
-function validIds(value: unknown): number[] {
-  return Array.isArray(value) ? [...new Set(value.filter(id => Number.isInteger(id) && catalog[id]))] : [];
-}
-function readPortraits() {
-  try { return validIds(JSON.parse(localStorage.getItem(portraitKey) || '[]')); } catch { return []; }
-}
-
 const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: string; screen: 'dm' | 'reading' }> = {
   dm: { text: 'DM에 답하면 오늘의 원문이 열려요.', label: 'DM에 답하기', screen: 'dm' },
   reading: { text: '짧은 원문을 읽고 문제를 맞혀 보세요.', label: '원문 읽기', screen: 'reading' },
@@ -31,15 +21,6 @@ const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: strin
 const arrivedBanners = new Set<string>();
 
 export function HomePage() {
-  const packDialog = useRef<HTMLDialogElement>(null);
-  const [owned, setOwned] = useState(readPortraits);
-  useEffect(() => {
-    const changed = (event: Event) => setOwned(validIds((event as CustomEvent).detail));
-    const synced = (event: StorageEvent) => { if (!event.key || event.key === portraitKey) setOwned(readPortraits()); };
-    window.addEventListener('hipdok:portraits', changed);
-    window.addEventListener('storage', synced);
-    return () => { window.removeEventListener('hipdok:portraits', changed); window.removeEventListener('storage', synced); };
-  }, []);
   const { progress } = useSnapshot();
   const ranking = useRanking(progress.favoriteId, progress.score);
   const [arriving] = useState(() => {
@@ -77,6 +58,7 @@ export function HomePage() {
 
   return (
     <div className="page home">
+      <CharacterSwitcher />
       <section className="hero-card">
         <Portrait character={character} className="hero-portrait" stage={bondStage} />
         <div className="hero-text">
@@ -121,27 +103,6 @@ export function HomePage() {
         <span className="dm-banner-text">{dm.preview}</span>
       </button>
 
-      <section className="panel">
-        <h2 className="section-title">사유의 초상</h2>
-        <p className="mission-text">배움·관계·자유 팩에서 사상가를 만나고 초상 카드를 모아 보세요.</p>
-        <button type="button" className="btn btn-primary btn-block" onClick={() => packDialog.current?.showModal()}>
-          사상가 카드팩 열기
-        </button>
-        <h3 style={{margin: '18px 0 8px'}}>내가 뽑은 카드 <small>{owned.length} / {catalog.length}</small></h3>
-        {owned.length ? <ul aria-label="내가 뽑은 카드" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(104px,100%),1fr))',gap:10,listStyle:'none',padding:0,margin:0}}>
-          {owned.map(id => <li key={id} style={{border:'1px solid #dfd3bf',borderRadius:10,overflow:'hidden',background:'#fffaf1'}}>
-            <img src={catalog[id].image} alt="" style={{width:'100%',aspectRatio:'3/4',objectFit:'cover',display:'block'}} />
-            <div style={{padding:8}}><strong>{catalog[id].name}</strong><br/><small>{catalog[id].theme}</small></div>
-          </li>)}
-        </ul> : <p className="mission-text">첫 팩을 열면 여기에 나의 첫 초상이 걸려요.</p>}
-      </section>
-      <dialog ref={packDialog} aria-label="사상가 카드팩" style={{ padding: 0, width: 'min(880px, 96vw)', maxWidth: '96vw', border: 0, borderRadius: 14, background: '#132725', color: '#f7efda', margin: 'auto' }}>
-        <form method="dialog" style={{ textAlign: 'right', padding: '8px 16px' }}>
-          <button type="submit" className="btn" style={{ color: '#f7efda', background: 'transparent' }}>닫기</button>
-        </form>
-        <iframe title="사유의 초상 카드팩" srcDoc={packPage} loading="lazy" style={{ display: 'block', border: 0, width: '100%', height: 'min(76dvh, 710px)' }} />
-      </dialog>
-      <NietzscheCards />
       <RankingList ranking={ranking} />
     </div>
   );

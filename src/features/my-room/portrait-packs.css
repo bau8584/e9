@@ -1,0 +1,13 @@
+.portrait-packs { margin: 16px 0; padding: 20px; background: #fffdf7; border: 1px solid #e4dac8; border-radius: 10px; }
+.portrait-packs h2 { margin: 4px 0 6px; font-size: 1.25rem; }
+.portrait-packs h3 { margin: 18px 0 8px; font-size: 1rem; }
+.portrait-packs p { margin: 0 0 12px; font-size: .95rem; line-height: 1.5; }
+.portrait-packs > button { min-height: 44px; }
+.portrait-packs ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(104px, 100%), 1fr)); gap: 10px; list-style: none; padding: 0; margin: 0; }
+.portrait-packs li { border: 1px solid #dfd3bf; border-radius: 10px; overflow: hidden; background: #fffaf1; }
+.portrait-packs li img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.portrait-packs li div { display: flex; flex-direction: column; gap: 2px; padding: 8px; }
+.portrait-packs dialog { padding: 0; width: min(880px, 96vw); max-width: 96vw; margin: auto; border: 0; border-radius: 14px; background: #132725; color: #f7efda; }
+.portrait-packs dialog form { padding: 8px 16px; text-align: right; }
+.portrait-packs dialog form button { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.portrait-packs iframe { display: block; width: 100%; height: min(76dvh, 710px); border: 0; }
