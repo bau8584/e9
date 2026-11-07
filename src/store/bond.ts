@@ -2,6 +2,7 @@
 // 저장하는 것은 "단계 상승 장면을 본 단계"뿐이다. 기기를 옮기면 장면이 한 번 더 나올 수 있다.
 import type { CharacterId } from '../data';
 import { loadLibrary } from '../library.mjs';
+import { favoriteCardCount } from './progress';
 import { useSnapshot } from './store';
 
 export const BOND_SEEN_KEY = 'hipdok:bond:v1';
@@ -88,7 +89,7 @@ export interface BondStatus {
 export function useBond(): BondStatus {
   const { progress } = useSnapshot();
   const books = readBooks();
-  const points = activityPoints(progress.cards.length, books);
+  const points = activityPoints(favoriteCardCount(progress), books);
   const earned = stageOfPoints(points);
   const seen = progress.favoriteId ? readSeenStage(progress.favoriteId) : 0;
   return { earned, stage: Math.max(earned, seen), points, latestBook: latestBookTitle(books) };

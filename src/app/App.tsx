@@ -100,7 +100,7 @@ export function App() {
               {screen === 'landing' && <LandingPage />}
               {screen === 'onboarding' && <OnboardingPage />}
               {screen === 'badge' && <BadgePage />}
-              {screen === 'home' && <HomePage />}
+              {screen === 'home' && <HomePage key={progress.favoriteId ?? ''} />}
               {screen === 'dm' && <DmPage />}
               {screen === 'reading' && <ReadingPage />}
             </div>

@@ -108,6 +108,36 @@ export function advanceMission(p: Progress): Progress {
   };
 }
 
+/** 작가마다 따로 두는 미션 상태. 카드, 점수, 보상 기록, 닉네임은 작가 공통이다. */
+export type MissionState = Pick<Progress, 'missionIndex' | 'stage' | 'dmRead' | 'dmChoiceId' | 'lastWrongOptionId'>;
+
+export const missionStateOf = (p: Progress): MissionState => ({
+  missionIndex: p.missionIndex,
+  stage: p.stage,
+  dmRead: p.dmRead,
+  dmChoiceId: p.dmChoiceId,
+  lastWrongOptionId: p.lastWrongOptionId,
+});
+
+/** 대화할 작가를 바꾼다. 빼 둔 상태가 있으면 이어 가고 없으면 첫 미션부터. 저장값은 믿지 않고 거른다. */
+export function switchCharacter(p: Progress, id: CharacterId, saved?: unknown): Progress {
+  const init = createInitial();
+  const s: Partial<MissionState> = saved && typeof saved === 'object' ? (saved as Partial<MissionState>) : {};
+  return sanitize({
+    ...p,
+    favoriteId: id,
+    missionIndex: s.missionIndex ?? init.missionIndex,
+    stage: s.stage ?? init.stage,
+    dmRead: s.dmRead ?? init.dmRead,
+    dmChoiceId: s.dmChoiceId ?? init.dmChoiceId,
+    lastWrongOptionId: s.lastWrongOptionId ?? init.lastWrongOptionId,
+  });
+}
+
+/** 지금 작가의 카드 수. 작가가 없으면 0장. */
+export const favoriteCardCount = (p: Progress): number =>
+  p.favoriteId ? p.cards.filter((id) => getCard(id)?.characterId === p.favoriteId).length : 0;
+
 /** 인물의 마지막 미션까지 끝냈는지 */
 export const isSeasonComplete = (p: Progress): boolean =>
   Boolean(p.favoriteId) && p.stage === 'done' && p.missionIndex + 1 >= getMissionCount(p.favoriteId as CharacterId);

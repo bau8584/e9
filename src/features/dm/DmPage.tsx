@@ -1,5 +1,6 @@
 import { NietzscheCards } from '../home/NietzscheCards';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CharacterSwitcher } from '../../components/CharacterSwitcher';
 import { AdaptedLabel } from '../../components/Labels';
 import { Portrait } from '../../components/Portrait';
 import { getCharacter, getDm } from '../../data';
@@ -14,9 +15,17 @@ const NO_TEXTS: string[] = [];
 
 export function DmPage() {
   const { progress } = useSnapshot();
-  useEffect(markDmRead, []);
+  // 효과는 화면을 그린 뒤에 돈다. 새 작가 대화의 첫 재생 판단(playArrival)은 그리는 도중에 끝나므로 연출이 유지된다.
+  useEffect(markDmRead, [progress.favoriteId, progress.missionIndex]);
   if (!progress.favoriteId) return null;
-  return <DmConversation key={`${progress.favoriteId}:${progress.missionIndex}`} />;
+  return (
+    <>
+      <div className="dm-switcher">
+        <CharacterSwitcher />
+      </div>
+      <DmConversation key={`${progress.favoriteId}:${progress.missionIndex}`} />
+    </>
+  );
 }
 
 function DmConversation() {

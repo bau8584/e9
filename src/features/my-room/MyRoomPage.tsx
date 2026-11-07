@@ -4,6 +4,8 @@ import { getProgress, goTo } from '../../store/store';
 import { useLibrarySyncPaused } from '../../sync/sync';
 import { CardSummary } from './MyCards';
 import { LibraryDialogs } from './LibraryDialogs';
+import { PortraitPacks } from './PortraitPacks';
+import './portrait-packs.css';
 import { namesDiffer, useMyRoomData } from './myRoomData';
 import { RoomView } from './RoomView';
 import { useLibrary } from './useLibrary';
@@ -25,6 +27,7 @@ export function MyRoomPage() {
   {!blocked&&namesDiffer(home,data.nickname)&&<div className="name-notice" role="status"><p>이름이 두 개예요. 홈에서는 <strong>{home}</strong>, 서고에서는 <strong>{data.nickname}</strong>(으)로 불러요. 저절로 바꾸지 않으니 하나를 골라 주세요.</p><div><button className="secondary" onClick={()=>unifyName(home)}>{home}(으)로 통일</button><button className="secondary" onClick={()=>unifyName(data.nickname)}>{data.nickname}(으)로 통일</button></div></div>}
   {syncPaused&&<div className="name-notice" role="status" data-testid="library-sync-paused"><p>서고가 커서 서버 저장은 쉬어요. 이 기기의 기록은 그대로 있어요.</p></div>}
   <CardSummary/>
+  <PortraitPacks bookCount={data.books.length} onAddBook={lib.add}/>
   <RoomView lib={lib}/>
     </div><footer className="footer"><span>HIP讀</span><p>최애에게 DM 보내듯, 문학과 대화하다.</p><small>나만의 서고</small></footer></main>
 </div>

@@ -43,17 +43,19 @@ function turnCard(card,id){
  card.style.setProperty('--offset',(stage.getBoundingClientRect().left+stage.clientWidth/2-card.getBoundingClientRect().left-card.offsetWidth/2)+'px');
  setTimeout(()=>{if(token===transition){reveal(id,true);sparks(app.querySelector('.stage'))}},motionDelay(540))
 }
+function canOpen(){if(parent===window)return true;const ask={ok:false};try{parent.dispatchEvent(new parent.CustomEvent('hipdok:open-pack',{detail:ask}))}catch{}return ask.ok}
 function openPack(){
+ if(!canOpen()){begin('열 수 있는 팩이 없어요','읽은 책을 기록하면 팩을 하나 열 수 있어요.');const bar=controls();button(bar,'컬렉션 보기',collection);return}
  const token=++transition;sparks(app.querySelector('.stage'));app.querySelector('.pack').classList.add('opening');app.querySelectorAll('button').forEach(b=>b.disabled=true);
  setTimeout(()=>{if(transition!==token)return;begin(packs[pack][0],'뒷면을 눌러 나의 사상가를 만나세요.');const s=stage(),pool=[...packs[pack][3]];
  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
- pool.slice(0,3).forEach((id,i)=>{const b=button(s,'讀',()=>turnCard(b,id),'backcard');b.style.setProperty('--offset',(1-i)*100+'%');b.style.setProperty('--tilt',(i-1)*18+'deg');b.style.setProperty('--delay',i*90+'ms');b.ariaLabel=(i+1)+'번째 카드 뒤집기'});button(controls(),'다른 팩 고르기',home)},motionDelay(960))
+ pool.slice(0,3).forEach((id,i)=>{const b=button(s,'讀',()=>turnCard(b,id),'backcard');b.style.setProperty('--offset',(1-i)*100+'%');b.style.setProperty('--tilt',(i-1)*18+'deg');b.style.setProperty('--delay',i*90+'ms');b.ariaLabel=(i+1)+'번째 카드 뒤집기'});},motionDelay(960))
 }
 function reveal(id,draw){
  const fresh=!owned.has(id);if(draw){owned.add(id);try{localStorage.setItem(key,JSON.stringify([...owned]));saved=true}catch{saved=false}count()}
  begin(draw?(fresh?'첫 만남':'다시 만난 사상가'):'소장 카드',draw?(saved?'내 컬렉션에 담았어요.':'이번 방문 동안 컬렉션에 담았어요.'):'사상에서 착안한 질문을 읽어 보세요.');
  const [name,theme,q]=people[id];stage().innerHTML='<article class="card"><img src="'+art[id]+'" alt="'+name+' 창작 초상"><div class="info"><div class="serial">HIP讀 · NO. 0'+(id+1)+'</div><h2 class="name">'+name+'</h2><small>'+theme+'</small><p class="question">'+q+'</p></div></article>';
- const bar=controls();button(bar,'팩 다시 열기',home,'gold');button(bar,'컬렉션 보기',collection);
+ const bar=controls();button(bar,'다음 팩 보기',home,'gold');button(bar,'컬렉션 보기',collection);
 }
 function collection(){begin('내 컬렉션',owned.size+' / '+people.length+'명 소장 · '+(owned.size?'카드를 눌러 다시 보세요.':'첫 팩을 열어 사상가를 만나세요.'));const grid=document.createElement('div');grid.className='grid';app.append(grid);[...owned].sort().forEach(id=>{const b=button(grid,'',()=>reveal(id,false));b.innerHTML='<img alt="" src="'+art[id]+'"><b>'+people[id][0]+'</b>'});button(controls(),'팩 고르기',home,'gold')}
 album.onclick=collection;home();
