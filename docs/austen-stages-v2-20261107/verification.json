@@ -1,0 +1,30 @@
+[
+  {
+    "filename": "portrait-austen.png",
+    "title": "0단계 · 날카로운 관찰자",
+    "width": 800,
+    "height": 1000,
+    "sha256": "2428D13213BFC28AD6A04EC853C50A0C84B66FC8C0C84B49A108001324AF9B11"
+  },
+  {
+    "filename": "portrait-austen-stage1.png",
+    "title": "1단계 · 친애하는 독자",
+    "width": 800,
+    "height": 1000,
+    "sha256": "69C06E5C8F07DD4C87FDEA5808F2D6F9AF2081D03D4CEBCCE9FF3ACB44F97CD0"
+  },
+  {
+    "filename": "portrait-austen-stage2.png",
+    "title": "2단계 · 첫 번째 독자",
+    "width": 800,
+    "height": 1000,
+    "sha256": "DB985A429C11E966059A477F06898759828C81E2BB1EBD17E43AED69E2343381"
+  },
+  {
+    "filename": "portrait-austen-stage3.png",
+    "title": "3단계 · 뒷담화 친구",
+    "width": 800,
+    "height": 1000,
+    "sha256": "1477FFB59C609CDB976F2AB0655D4084FCBCB84A2A3C3EE93A1970F01E40D5EE"
+  }
+]
