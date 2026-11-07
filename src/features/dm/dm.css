@@ -21,3 +21,23 @@
 .dm-replies-label { margin: 0; font-size: .85rem; font-weight: 700; color: var(--muted); }
 .btn-reply { text-align: left; background: var(--surface); color: var(--purple); border: 1.5px solid var(--purple); font-weight: 500; word-break: keep-all; }
 .dm-relation { margin: 0 0 4px; font-size: .8rem; color: var(--purple); font-weight: 700; word-break: keep-all; }
+
+
+/* 게임 대화 장면: 인물을 크게 세우고 그 옆(폰은 아래)에서 대화가 이어진다. */
+.page.dm { display: flex; flex-direction: column; gap: 0; }
+.dm-stage { position: sticky; top: 0; z-index: 2; height: min(50dvh, 460px); margin: 0 -16px; overflow: hidden; background: var(--purple); }
+.dm-portrait { position: absolute; inset: 0; width: 100%; height: 100%; }
+.dm-portrait img { object-position: 50% 15%; }
+.dm-portrait.portrait-wide img { object-position: 82% 20%; }
+.dm-portrait .monogram { font-size: 5rem; }
+.dm-stage::after { content: ''; position: absolute; inset: 45% 0 0; background: linear-gradient(transparent, rgba(20, 8, 38, .9)); pointer-events: none; }
+.dm-stage .dm-who { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 1; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
+.dm-stage .dm-name { font-size: 1.6rem; }
+.dm-stage .dm-relation { color: var(--gold-soft); }
+.dm-talk { min-width: 0; }
+@media (min-width: 900px) {
+  .page.dm { display: grid; grid-template-columns: minmax(340px, 42%) minmax(0, 1fr); gap: 28px; align-items: start; max-width: 1040px; }
+  .dm-stage { top: 16px; height: auto; aspect-ratio: 4 / 5; max-height: calc(100dvh - 32px); margin: 0; border-radius: 14px; }
+  .dm-stage .dm-name { font-size: 2rem; }
+  .dm-thread { padding-top: 0; }
+}

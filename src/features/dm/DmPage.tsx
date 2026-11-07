@@ -1,11 +1,12 @@
 import { NietzscheCards } from '../home/NietzscheCards';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AdaptedLabel } from '../../components/Labels';
 import { Portrait } from '../../components/Portrait';
 import { getCharacter, getDm } from '../../data';
 import { bonds } from '../../data/bonds';
-import { useBondStage } from '../../store/bond';
+import { useBond } from '../../store/bond';
 import { chooseReply, goTo, markDmRead, useSnapshot } from '../../store/store';
+import { AI_CHARACTERS, AiChat, aiChatAvailable } from './AiChat';
 import { prefersReducedMotion, useMessageReveal } from './useMessageReveal';
 import './dm.css';
 
@@ -23,12 +24,15 @@ function DmConversation() {
   const character = getCharacter(progress.favoriteId!);
   const dm = getDm(character.id, progress.missionIndex);
   const chosen = dm.replies.find((r) => r.id === progress.dmChoiceId);
-  const bondStage = useBondStage();
+  const bondStage = useBond().stage;
+  // 가까워질수록 최애가 먼저 건네는 말이 대화 맨 앞에 붙는다. 대화를 열어 둔 동안 순서가 바뀌지 않게 고정한다.
+  const opener = bonds[character.id][bondStage].opener?.replaceAll('{name}', progress.nickname);
+  const messages = useMemo(() => (opener ? [opener, ...dm.messages] : dm.messages), [opener, dm.messages]);
 
   // 처음 받는 DM과 이 화면에서 방금 누른 답장만 재생한다. 다시 볼 때는 바로 다 보인다.
   const [playArrival] = useState(() => !progress.dmRead && !progress.dmChoiceId && !prefersReducedMotion());
   const [playedReplyId, setPlayedReplyId] = useState<string | null>(null);
-  const arrival = useMessageReveal(dm.messages, playArrival, 'arrive');
+  const arrival = useMessageReveal(messages, playArrival, 'arrive');
   const playAnswer = Boolean(chosen) && chosen?.id === playedReplyId;
   const answer = useMessageReveal(chosen?.answer ?? NO_TEXTS, playAnswer, 'answer');
 
@@ -63,8 +67,8 @@ function DmConversation() {
 
   return (
     <div className="page dm">
-      <header className="dm-head">
-        <Portrait character={character} className="dm-avatar" stage={bondStage} />
+      <header className="dm-stage">
+        <Portrait character={character} className="dm-portrait" stage={bondStage} />
         <div className="dm-who">
           <h1 className="dm-name">{character.name}</h1>
           <p className="dm-relation">{bonds[character.id][bondStage].title}</p>
@@ -76,8 +80,9 @@ function DmConversation() {
           )}
         </div>
       </header>
+      <div className="dm-talk">
       <div className="dm-thread" aria-live="polite" onClick={done ? undefined : skip}>
-        {dm.messages.slice(0, arrival.visibleCount).map((text) => (
+        {messages.slice(0, arrival.visibleCount).map((text) => (
           <p key={text} className={playArrival ? 'bubble bubble-them bubble-in' : 'bubble bubble-them'}>
             {text}
           </p>
@@ -129,6 +134,15 @@ function DmConversation() {
           ))}
         </div>
       )}
+      {done && aiChatAvailable() && AI_CHARACTERS.includes(character.id) && (
+        <AiChat
+          characterId={character.id}
+          name={character.name}
+          stage={bondStage}
+          context={[...messages.map((m) => `${character.name}: ${m}`), ...(chosen ? [`사용자: ${chosen.text}`, ...chosen.answer.map((m) => `${character.name}: ${m}`)] : [])].join('\n')}
+        />
+      )}
+      </div>
     </div>
   );
 }
