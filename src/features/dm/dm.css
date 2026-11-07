@@ -20,3 +20,4 @@
 .dm-replies { display: flex; flex-direction: column; gap: 8px; }
 .dm-replies-label { margin: 0; font-size: .85rem; font-weight: 700; color: var(--muted); }
 .btn-reply { text-align: left; background: var(--surface); color: var(--purple); border: 1.5px solid var(--purple); font-weight: 500; word-break: keep-all; }
+.dm-relation { margin: 0 0 4px; font-size: .8rem; color: var(--purple); font-weight: 700; word-break: keep-all; }

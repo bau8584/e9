@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AdaptedLabel } from '../../components/Labels';
 import { Portrait } from '../../components/Portrait';
 import { getCharacter, getDm } from '../../data';
+import { bonds } from '../../data/bonds';
+import { useBondStage } from '../../store/bond';
 import { chooseReply, goTo, markDmRead, useSnapshot } from '../../store/store';
 import { prefersReducedMotion, useMessageReveal } from './useMessageReveal';
 import './dm.css';
@@ -20,6 +22,7 @@ function DmConversation() {
   const character = getCharacter(progress.favoriteId!);
   const dm = getDm(character.id, progress.missionIndex);
   const chosen = dm.replies.find((r) => r.id === progress.dmChoiceId);
+  const bondStage = useBondStage();
 
   // 처음 받는 DM과 이 화면에서 방금 누른 답장만 재생한다. 다시 볼 때는 바로 다 보인다.
   const [playArrival] = useState(() => !progress.dmRead && !progress.dmChoiceId && !prefersReducedMotion());
@@ -60,9 +63,10 @@ function DmConversation() {
   return (
     <div className="page dm">
       <header className="dm-head">
-        <Portrait character={character} className="dm-avatar" />
+        <Portrait character={character} className="dm-avatar" stage={bondStage} />
         <div className="dm-who">
           <h1 className="dm-name">{character.name}</h1>
+          <p className="dm-relation">{bonds[character.id][bondStage].title}</p>
           <AdaptedLabel />
           {phase !== 'idle' && (
             <span className="dm-presence" aria-hidden="true">

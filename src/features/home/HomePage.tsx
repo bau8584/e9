@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Portrait } from '../../components/Portrait';
 import { RankingList, useRanking } from '../../components/RankingList';
 import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
+import { bonds } from '../../data/bonds';
+import { markStageSeen, readSeenStage, useBondStage } from '../../store/bond';
 import { isSeasonComplete, type Stage } from '../../store/progress';
 import { goTo, useSnapshot } from '../../store/store';
+import { BondMoment } from './BondMoment';
 import './home.css';
 
 const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: string; screen: 'dm' | 'reading' }> = {
@@ -24,8 +27,27 @@ export function HomePage() {
     arrivedBanners.add(key);
     return true;
   });
+  const bondStage = useBondStage();
+  const [seenStage, setSeenStage] = useState(() => (progress.favoriteId ? readSeenStage(progress.favoriteId) : 0));
   if (!progress.favoriteId || !ranking) return null;
   const character = getCharacter(progress.favoriteId);
+  const bond = bonds[character.id][bondStage];
+  const fill = (text: string) => text.replaceAll('{name}', progress.nickname);
+  if (bondStage > seenStage) {
+    return (
+      <BondMoment
+        character={character}
+        bond={bond}
+        stage={bondStage}
+        fill={fill}
+        onClose={() => {
+          markStageSeen(character.id, bondStage);
+          setSeenStage(bondStage);
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
+  }
   const dm = getDm(character.id, progress.missionIndex);
   const reading = getReading(character.id, progress.missionIndex);
   const missionCount = getMissionCount(character.id);
@@ -34,14 +56,15 @@ export function HomePage() {
   return (
     <div className="page home">
       <section className="hero-card">
-        <Portrait character={character} className="hero-portrait" />
+        <Portrait character={character} className="hero-portrait" stage={bondStage} />
         <div className="hero-text">
-          <p className="hero-badge">{character.name} 팬</p>
+          <p className="hero-badge">{bond.title}</p>
           <h1 className="hero-name">{progress.nickname}</h1>
           <p className="hero-english">{character.englishName}</p>
           <p className="hero-stats">
             내 점수 <strong data-testid="my-score">{progress.score}</strong>점, 카드 <strong>{progress.cards.length}</strong>장
           </p>
+          <p className="hero-greeting">{fill(bond.greeting)}</p>
         </div>
       </section>
 
@@ -51,6 +74,14 @@ export function HomePage() {
           <p className="mission-text">
             {character.name}의 미션 {missionCount}개를 모두 끝냈어요. 다음 시즌의 DM과 원문은 준비 중이에요.
           </p>
+          {bondStage === 2 && (
+            <>
+              <p className="mission-text">최애가 당신의 책장을 궁금해해요. 읽은 책을 한 권 등록해 보세요.</p>
+              <button type="button" className="btn btn-primary btn-block" onClick={() => goTo('myroom')}>
+                내 방에 책 등록하기
+              </button>
+            </>
+          )}
         </section>
       ) : (
         <section className="panel">
