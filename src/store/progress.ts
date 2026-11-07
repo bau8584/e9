@@ -112,15 +112,6 @@ export function advanceMission(p: Progress): Progress {
 export const isSeasonComplete = (p: Progress): boolean =>
   Boolean(p.favoriteId) && p.stage === 'done' && p.missionIndex + 1 >= getMissionCount(p.favoriteId as CharacterId);
 
-/**
- * 최애와의 관계 단계(0~3). 카드 1장, 2장에 오르고, 카드 2장에 서고의 책이 1권 이상이면 마지막 단계.
- * 저장하지 않고 계산하며 내려가지 않는 행동만 쓴다. 오래 안 와도 떨어지지 않는다.
- */
-export function relationStage(p: Pick<Progress, 'cards'>, bookCount = 0): number {
-  const stage = Math.min(p.cards.length, 2);
-  return stage === 2 && bookCount > 0 ? 3 : stage;
-}
-
 /** 화면 이동 규칙. 홈이나 DM으로 가면 끝낸 미션 다음의 새 DM이 열린다. */
 export function moveTo(p: Progress, screen: Screen): Progress {
   const moved = { ...p, screen };
