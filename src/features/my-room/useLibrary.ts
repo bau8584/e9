@@ -3,11 +3,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { STORAGE_KEY, libraryStats, mergeLegacy, saveLibrary, selectBooks, validateBook } from '../../library.mjs';
 import { findEdition } from '../../editions.mjs';
 import { books as legacyCatalog } from '../../legacy-data';
-import { renameNickname } from '../../store/store';
+import { cleanNickname, renameNickname } from './myRoomData';
 import { sampleBooks, nietzscheShelfBooks, type PersonalBook, type LibraryData } from './libraryData';
 import { blankBook, readInitial, today, type BookDraft } from './storage';
 
-type Popup = 'add' | 'detail' | 'profile' | null;
+type Popup = 'add' | 'detail' | 'profile' | 'reset' | null;
 
 export function useLibrary(seedNickname: string) {
   const [initial] = useState(() => readInitial(seedNickname));
@@ -47,7 +47,9 @@ export function useLibrary(seedNickname: string) {
   function chooseShelf(id:string){setShelf(id);setQuery('');requestAnimationFrame(()=>bookArea.current?.scrollIntoView({behavior:'smooth',block:'start'}));}
   const showSample=()=>{setPreview(v=>!v);setShelf('all');setQuery('');};
   const selectedEdition=selected?findEdition(selected):undefined;
-  function saveNickname(e:React.FormEvent){e.preventDefault();const name=nickname.trim();if(!name)return;if(commit({...data,nickname:name})){renameNickname(name);setDirty(false);setPopup(null);say('내 방의 이름표를 바꿨어요.');}}
-  return { data, error, preview, shelf, setShelf, query, setQuery, sort, setSort, popup, setPopup, selected, draft, setDraft, editingId, errors, setDirty, nickname, setNickname, toast, referenceBooks, books, counts, visible, bookArea, close, add, registerBook, detail, edit, submit, backup, importLegacy, readImport, chooseShelf, showSample, selectedEdition, saveNickname };
+  function saveNickname(e:React.FormEvent){e.preventDefault();const name=cleanNickname(nickname);if(!name)return;if(commit({...data,nickname:name})){renameNickname(name);setDirty(false);setPopup(null);say('내 방의 이름표를 바꿨어요.');}}
+  /** 사용자가 고른 이름 하나로 홈과 서고를 맞춘다. 사용자가 누를 때만 실행한다. */
+  function unifyName(raw:string){const name=cleanNickname(raw);if(!name)return;if(commit({...data,nickname:name})){renameNickname(name);say(`이제 어디서나 ${name}(으)로 불러요.`);}}
+  return { blocked:!!initial.blocked, say, unifyName, data, error, preview, shelf, setShelf, query, setQuery, sort, setSort, popup, setPopup, selected, draft, setDraft, editingId, errors, setDirty, nickname, setNickname, toast, referenceBooks, books, counts, visible, bookArea, close, add, registerBook, detail, edit, submit, backup, importLegacy, readImport, chooseShelf, showSample, selectedEdition, saveNickname };
 }
 export type Library = ReturnType<typeof useLibrary>;

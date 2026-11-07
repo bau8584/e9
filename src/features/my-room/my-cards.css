@@ -1,0 +1,45 @@
+/* 내 문장 카드 구역, 이름 안내, 초기화 확인 창. 스코프는 빌드 때 .my-room-scope 로 묶인다. */
+.my-cards { margin: 28px 0; padding: 22px; background: #fffdf7; border: 1px solid rgba(42, 17, 71, .14); border-radius: 12px; min-width: 0; }
+.my-cards-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.my-cards-head h2 { margin: 4px 0 0; color: #2a1147; font-size: 1.4rem; }
+.my-cards-head h2 span { margin-left: 8px; color: #4b1f78; font-size: 1rem; }
+.my-cards-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.fan-tag, .score-tag { padding: 5px 12px; border-radius: 999px; font-size: .86rem; font-weight: 700; }
+.fan-tag { background: #2a1147; color: #fff7dc; }
+.score-tag { background: #f3e7c0; color: #2a1147; }
+.my-cards-group h3 { margin: 22px 0 10px; color: #2a1147; font-size: 1.05rem; }
+.my-cards-group h3 small { margin-left: 8px; padding: 2px 8px; background: #4b1f78; border-radius: 4px; color: #fff; font-size: .72rem; }
+.my-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.my-card-item { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.my-card-item .quote-card { width: 100%; }
+.my-card-item button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; }
+.my-cards-empty { margin-top: 16px; padding: 22px; border: 1px dashed rgba(42, 17, 71, .3); border-radius: 10px; text-align: center; }
+.my-cards-empty p { margin: 0 0 14px; color: #4a4257; word-break: keep-all; }
+.my-cards-empty button { min-height: 44px; margin: 0 auto; }
+.my-cards-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; margin-top: 20px; padding-top: 12px; border-top: 1px solid rgba(42, 17, 71, .12); }
+.my-cards-foot p { margin: 0; color: #5a5266; font-size: .84rem; word-break: keep-all; }
+.my-cards-foot button { min-height: 44px; }
+.name-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; padding: 12px 16px; background: #f3e7c0; border-radius: 10px; color: #2a1147; }
+.name-notice p { flex: 1 1 260px; margin: 0; min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+.name-notice div { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.name-notice button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.reset-confirm h3 { margin: 14px 0 4px; font-size: .95rem; }
+.reset-confirm ul { margin: 0; padding-left: 20px; }
+.reset-confirm p { margin: 14px 0; word-break: keep-all; }
+.reset-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.reset-actions button { flex: 1 1 130px; min-height: 44px; }
+.reset-actions .danger { padding: 8px 14px; background: #9c2f2a; border: 0; border-radius: 8px; color: #fff; font-weight: 700; cursor: pointer; }
+
+/* 휴대폰에서 누르는 곳을 44px 이상으로. room.css 원본은 그대로 두고 여기서 덮는다. */
+@media (max-width: 900px) {
+  .topbar .icon-btn, .topbar .top-user, .page-heading .primary, .reference-banner button, .near-hint, .mobile-dpad button,
+  .room-tip .text-btn, .preview-toggle, .collection-actions .text-btn, .collection-actions select, .shelf-tabs button,
+  .search-box input, .search-box button, .import-panel .secondary, .empty-state .primary, .empty-state .text-btn, .dialog .icon-btn, .dialog input, .dialog select, .dialog .primary, .dialog .secondary { min-height: 44px !important; }
+  .topbar .icon-btn, .mobile-dpad button, .search-box button, .dialog .icon-btn, .shelf-tabs button, .color-choice button { min-width: 44px !important; }
+  .color-choice button { min-height: 44px !important; }
+  .topbar .top-user { display: block; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .top-user svg { display: none; }
+  .color-choice { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; max-width: 100%; }
+  .talk-table { min-width: 44px; }
+  .my-cards { padding: 16px; }
+}
