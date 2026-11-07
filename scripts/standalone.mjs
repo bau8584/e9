@@ -1,0 +1,11 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const root=new URL('../',import.meta.url);
+let html=await readFile(new URL('dist/index.html',root),'utf8');
+const script=html.match(/<script[^>]+src="([^"]+)"[^>]*><\/script>/);
+const stylesheet=html.match(/<link[^>]+href="([^"]+\.css)"[^>]*>/);
+if(!script||!stylesheet)throw Error('빌드 결과의 JS/CSS 파일을 찾지 못했습니다.');
+const js=await readFile(new URL(`dist/${script[1].replace(/^\.\//,'')}`,root),'utf8');
+const css=await readFile(new URL(`dist/${stylesheet[1].replace(/^\.\//,'')}`,root),'utf8');
+html=html.replace(script[0],()=>`<script type="module">${js.replaceAll('</script','<\\/script')}</script>`).replace(stylesheet[0],()=>`<style>${css}</style>`);
+await writeFile(new URL('힙독.html',root),html,'utf8');
+console.log('이미지를 포함한 단일 실행 파일: 힙독.html');

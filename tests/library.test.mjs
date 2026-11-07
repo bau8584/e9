@@ -1,0 +1,35 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {STORAGE_KEY,freshLibrary,validateBook,loadLibrary,saveLibrary,selectBooks,libraryStats,mergeLegacy,insideFloor} from '../src/library.mjs';
+import {NIETZSCHE_EDITIONS,findEdition} from '../src/editions.mjs';
+const makeBook=(values={})=>({id:'book-1',title:'나의 책',author:'저자',genre:'문학',finishedAt:'2026-11-07',quote:'',memo:'',color:'#73547e',createdAt:'2026-11-07T00:00:00Z',updatedAt:'2026-11-07T00:00:00Z',...values});
+const memory=(raw=null)=>({value:raw,getItem(key){assert.equal(key,STORAGE_KEY);return this.value;},setItem(key,value){assert.equal(key,STORAGE_KEY);this.value=value;}});
+test('새 개인 서고는 예시 도서와 학년 없이 빈 상태로 시작한다',()=>{const state=loadLibrary(memory());assert.equal(state.blocked,false);assert.deepEqual(state.data.books,[]);assert.equal('gradeId' in state.data,false);});
+test('제목·저자·장르·실제 달력 날짜를 검증하고 문장·감상은 선택으로 둔다',()=>{assert.deepEqual(validateBook(makeBook()),{});assert.ok(validateBook(makeBook({title:'  '})).title);assert.ok(validateBook(makeBook({author:''})).author);assert.ok(validateBook(makeBook({genre:'1학년'})).genre);assert.ok(validateBook(makeBook({finishedAt:'2026-02-30'})).finishedAt);assert.ok(validateBook(makeBook({quote:'가'.repeat(501)})).quote);});
+test('개인 기록 저장 후 완독일·문장·감상·닉네임을 그대로 복원한다',()=>{const storage=memory();const data={...freshLibrary(),nickname:'독서가',books:[makeBook({quote:'기억할 문장',memo:'내 생각'})]};assert.equal(saveLibrary(storage,data),true);assert.deepEqual(loadLibrary(storage).data,data);});
+test('손상된 데이터와 중복 식별자는 저장을 차단하고 원본을 보존한다',()=>{for(const raw of ['{bad',JSON.stringify({...freshLibrary(),books:[makeBook(),makeBook()]})]){const storage=memory(raw);assert.equal(loadLibrary(storage).blocked,true);assert.equal(storage.value,raw);}});
+test('저장소 용량 부족을 실패로 보고한다',()=>{assert.equal(saveLibrary({setItem(){throw Error('quota');}},freshLibrary()),false);});
+test('장르·문장 수집·검색·정렬은 완독한 개인 책 목록에서만 집계한다',()=>{const books=[makeBook({id:'a',title:'변신',author:'카프카',finishedAt:'2026-10-01'}),makeBook({id:'b',title:'철학책',genre:'철학',quote:'문장'})];assert.deepEqual(selectBooks(books,'문학').map(b=>b.id),['a']);assert.deepEqual(selectBooks(books,'quotes').map(b=>b.id),['b']);assert.deepEqual(selectBooks(books,'all',' 카프카 ').map(b=>b.id),['a']);assert.deepEqual(selectBooks(books).map(b=>b.id),['b','a']);assert.deepEqual(libraryStats(books),{total:2,quotes:1,authors:2});});
+test('책사이 가져오기는 현재 사용자의 최신 완독 기록만 반영하고 재실행해도 중복되지 않는다',()=>{const catalog=[{id:'b1',subtitle:'가져올 책',author:'원저자'}];const legacy={version:1,profile:{id:'me'},records:[{userId:'me',bookId:'b1',status:'reading',createdAt:'2026-10-01T00:00:00Z'},{userId:'me',bookId:'b1',status:'finished',createdAt:'2026-11-01T00:00:00Z',quote:'구절',reason:'이유'},{userId:'other',bookId:'b1',status:'finished',createdAt:'2026-11-02T00:00:00Z'}]};const raw=JSON.stringify(legacy);const imported=mergeLegacy([],legacy,catalog,'2026-11-07T00:00:00Z');assert.equal(imported.count,1);assert.equal(imported.books[0].quote,'구절');assert.equal(imported.books[0].finishedAt,'2026-11-01');assert.equal(mergeLegacy(imported.books,legacy,catalog).count,0);assert.equal(JSON.stringify(legacy),raw);assert.deepEqual(validateBook(imported.books[0]),{});});
+test('최신 기록이 읽는 중으로 바뀐 책은 완독 서고로 가져오지 않는다',()=>{const legacy={version:1,profile:{id:'me'},records:[{userId:'me',bookId:'b1',status:'finished',createdAt:'2026-10-01'},{userId:'me',bookId:'b1',status:'reading',createdAt:'2026-11-01'}]};assert.equal(mergeLegacy([],legacy,[{id:'b1'}]).count,0);assert.throws(()=>mergeLegacy([],{},[]));});
+test('아바타가 책사이 바닥 안에서만 이동할 수 있다',()=>{assert.equal(insideFloor(51,74),true);assert.equal(insideFloor(0,0),false);assert.equal(insideFloor(100,100),false);});
+test('니체 저서의 제목·저자·판본을 대조해 해당하는 실제 표지를 연결한다',()=>{
+  assert.equal(NIETZSCHE_EDITIONS.length,3);
+  assert.equal(findEdition({title:'차라투스트라는 이렇게 말했다',author:'프리드리히 니체'})?.id,'zarathustra-sasaek');
+  assert.equal(findEdition({title:'도덕의 계보학',author:'니체'})?.id,'genealogy-yeonam');
+  assert.equal(findEdition({title:'Beyond Good and Evil',author:'Friedrich Nietzsche'})?.id,'beyond-good-evil-penguin');
+  assert.equal(findEdition({title:'선악의 저편 (영문판)',author:'프리드리히 니체'})?.language,'영문판');
+  assert.equal(findEdition({title:'도덕의 계보학',author:'다른 저자'}),undefined);
+  assert.equal(findEdition({title:'다른 책',author:'니체',editionId:'genealogy-yeonam'}),undefined);
+});
+test('표지 판본을 보존해 저장하되 참고 도서를 완독 기록으로 자동 저장하지 않는다',()=>{
+  const reference=makeBook({isReference:true,finishedAt:'',editionId:'genealogy-yeonam'});
+  assert.ok(validateBook(reference).isReference);
+  assert.ok(validateBook(reference).finishedAt);
+  const own=makeBook({title:'도덕의 계보학',author:'프리드리히 니체',editionId:'genealogy-yeonam'});
+  assert.deepEqual(validateBook(own),{});
+  const storage=memory();
+  saveLibrary(storage,{...freshLibrary(),books:[own]});
+  assert.equal(findEdition(loadLibrary(storage).data.books[0])?.publisher,'연암서가');
+  assert.ok(validateBook({...own,editionId:'https://untrusted.example/cover.jpg'}).editionId);
+});
