@@ -13,7 +13,7 @@ function Passage({ reading }: { reading: Reading }) {
       </p>
       <blockquote className="passage-original" lang="">{reading.original}</blockquote>
       <p className="passage-translation">{reading.translation}</p>
-      <p className="passage-note">제작진 임시 번역</p>
+      <p className="passage-note">제작진 초벌 번역</p>
       <p className="passage-source">{reading.source}</p>
     </section>
   );

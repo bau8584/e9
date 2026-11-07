@@ -51,7 +51,7 @@ export const needsReview = (card: QuoteCard): boolean => (card as QuoteCard & { 
 /** 복사할 글. 검수 전 카드는 복사한 글에도 그 사실을 남긴다. */
 export function cardShareText(card: QuoteCard): string {
   const lines = [`"${card.quote}"`, `${getCharacter(card.characterId).name}, ${card.source}`];
-  lines.push(needsReview(card) ? '제작진 임시 번역 (검수 필요)' : '제작진 번역');
+  lines.push(needsReview(card) ? '제작진 초벌 번역 (검수 필요)' : '제작진 번역');
   return lines.join('\n');
 }
 

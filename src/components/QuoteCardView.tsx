@@ -19,7 +19,7 @@ export function QuoteCardView({ card, reveal = false }: { card: QuoteCard; revea
         <p className="quote-source">{card.source}</p>
         <p className="quote-meta">
           <ReviewLabel />
-          <span>제작진 임시 번역</span>
+          <span>제작진 초벌 번역</span>
         </p>
       </div>
     </article>

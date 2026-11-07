@@ -48,9 +48,9 @@ export interface Reading {
   title: string;
   /** 원문(원어) 짧게 */
   original: string;
-  /** 제작진 임시 번역 */
+  /** 제작진 초벌 번역 */
   translation: string;
-  /** 출처 표기. 검수 전에는 "확인 필요"를 함께 쓴다. */
+  /** 확정 출처 표기. 추정 표현을 쓰지 않는다. 사람 확인 여부는 "검수 필요" 라벨이 나타낸다. */
   source: string;
   question: string;
   options: QuizOption[];
@@ -66,7 +66,7 @@ export interface QuoteCard {
   id: string;
   characterId: CharacterId;
   rarity: Rarity;
-  /** 카드에 쓰는 문장 (제작진 임시 번역) */
+  /** 카드에 쓰는 문장 (제작진 초벌 번역) */
   quote: string;
   source: string;
   imageFile: string;
