@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DiscoveryDialog } from '../features/discovery/DiscoveryDialog';
+import { RESULT_KEY } from '../features/discovery/discoveryData';
 import { BottomNav } from '../components/BottomNav';
 import { SaveBanner } from '../components/SaveBanner';
 import { DmPage } from '../features/dm/DmPage';
@@ -15,9 +16,29 @@ import { getProgress, goTo, reloadFromStorage, STORAGE_KEY, useSnapshot } from '
 import '../styles/motion.css';
 
 const MAIN_SCREENS: Screen[] = ['home', 'dm', 'reading', 'myroom'];
+const TASTE_INTRO_KEY = 'hipdok:taste-intro-seen';
+
+// 처음 온 사람에게만 독서 MBTI를 자동으로 연다. 저장소를 못 읽으면 열지 않는다.
+function shouldAutoOpenTaste() {
+  const { screen, nickname, favoriteId } = getProgress();
+  if (screen !== 'landing' || nickname || favoriteId) return false;
+  try {
+    return !localStorage.getItem(TASTE_INTRO_KEY) && !localStorage.getItem(RESULT_KEY);
+  } catch {
+    return false;
+  }
+}
 
 export function App() {
-  const [tasteOpen, setTasteOpen] = useState(false);
+  const [tasteOpen, setTasteOpen] = useState(shouldAutoOpenTaste);
+  const closeTaste = () => {
+    setTasteOpen(false);
+    try {
+      localStorage.setItem(TASTE_INTRO_KEY, '1');
+    } catch {
+      // 저장이 막혀 있어도 창은 닫는다.
+    }
+  };
   const { progress, saveFailed } = useSnapshot();
   const { screen } = progress;
   const withNav = MAIN_SCREENS.includes(screen);
@@ -86,7 +107,7 @@ export function App() {
           </main>
         </div>
       )}
-      {tasteOpen && <div className="fandom-scope"><DiscoveryDialog onClose={() => setTasteOpen(false)} /></div>}
+      {tasteOpen && <div className="fandom-scope"><DiscoveryDialog onClose={closeTaste} /></div>}
       {withNav && <BottomNav />}
     </>
   );
