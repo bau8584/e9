@@ -1,0 +1,14 @@
+.character-switcher { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.character-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; min-height: 44px; padding: 5px 14px 5px 6px;
+  font: inherit; font-size: .9rem; font-weight: 700; color: var(--purple); background: var(--surface);
+  border: 1.5px solid var(--line-strong); border-radius: 999px; cursor: pointer;
+}
+.character-chip:hover { border-color: var(--purple); }
+.character-chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.character-chip[aria-pressed='true'] { color: var(--on-deep); background: var(--purple); border-color: var(--purple); }
+.character-chip > span[aria-hidden] { flex: none; }
+.character-chip-portrait { width: 32px; height: 32px; border-radius: 50%; }
+.character-chip-portrait .monogram { font-size: .95rem; }
+.character-chip-portrait .image-placeholder::after { display: none; }
+.character-chip-name { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; text-align: left; }

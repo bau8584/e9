@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { characters, getCard, getDm, getMissionCount, getReading, REWARD_SCORE, cards, dms, readings, type CharacterId } from '../data';
 import { getCards, getFavorite, getNickname, getScore, resetAll } from '../features/my-room/myRoomData';
-import { cleanNickname, computeRanking, isSeasonComplete, rankOf, sanitize, createInitial } from './progress';
+import { cleanNickname, computeRanking, drawCard, favoriteCardCount, isSeasonComplete, rankOf, sanitize, createInitial, switchCharacter } from './progress';
 import * as store from './store';
 
 const reachDraw = () => {
@@ -239,6 +239,121 @@ describe('입덕 중 닉네임', () => {
     store.saveNicknameDraft('다시');
     store.resetProgress();
     expect(store.readNicknameDraft()).toBe('');
+  });
+});
+
+describe('여러 작가 덕질', () => {
+  const nietzscheMidway = () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    playMission('nietzsche', 0);
+    store.goTo('dm');
+    store.chooseReply(getDm('nietzsche', 1).replies[1].id);
+  };
+  const fresh = { missionIndex: 0, stage: 'dm', dmRead: false, dmChoiceId: null, lastWrongOptionId: null };
+
+  it('다른 작가로 가면 새 미션, 돌아오면 하던 자리에서 이어진다', () => {
+    nietzscheMidway();
+    const before = store.getProgress();
+    store.switchFavorite('xunzi');
+    expect(store.getProgress()).toMatchObject({ ...fresh, favoriteId: 'xunzi', screen: before.screen, score: 20, nickname: '덕구' });
+    expect(store.getProgress().cards).toEqual(before.cards);
+    store.switchFavorite('nietzsche');
+    expect(store.getProgress()).toEqual(before);
+  });
+  it('새로고침해도 빼 둔 상태가 남는다', () => {
+    nietzscheMidway();
+    const before = store.getProgress();
+    store.switchFavorite('xunzi');
+    store.reloadFromStorage();
+    store.switchFavorite('nietzsche');
+    expect(store.getProgress()).toEqual(before);
+  });
+  it('같은 작가로 바꾸면 아무것도 안 한다', () => {
+    nietzscheMidway();
+    const before = store.getProgress();
+    store.switchFavorite('nietzsche');
+    expect(store.getProgress()).toBe(before);
+    expect(window.localStorage.getItem(store.ROSTER_KEY)).toBeNull();
+  });
+  it('두 작가 미션을 하면 보상이 각각 들어오고 시즌 완료도 작가별이다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    playMission('nietzsche', 0);
+    store.goTo('home');
+    playMission('nietzsche', 1);
+    expect(isSeasonComplete(store.getProgress())).toBe(true);
+    store.switchFavorite('xunzi');
+    expect(isSeasonComplete(store.getProgress())).toBe(false);
+    playMission('xunzi', 0);
+    expect(getScore()).toBe(60);
+    expect(store.getProgress().cards).toContain(getReading('xunzi', 0).cardId);
+    expect(store.getProgress().cards).toHaveLength(3);
+  });
+  it('둘째 미션의 대체 카드는 다른 작가 카드로 새지 않는다', () => {
+    const p = { ...sanitize({ ...createInitial(), nickname: '덕구', favoriteId: 'xunzi', screen: 'reading', stage: 'draw', missionIndex: 1 }), cards: [getReading('nietzsche', 0).cardId, getReading('xunzi', 1).cardId] };
+    expect(drawCard(p).cards.at(-1)).toBe(getReading('xunzi', 0).cardId);
+  });
+  it('깨진 저장값이어도 멈추지 않고 공통 기록은 덮이지 않는다', () => {
+    nietzscheMidway();
+    window.localStorage.setItem(store.ROSTER_KEY, JSON.stringify({ xunzi: { missionIndex: 99, stage: '이상', dmChoiceId: 5, score: 999, cards: [] } }));
+    store.switchFavorite('xunzi');
+    expect(store.getProgress()).toMatchObject({ ...fresh, favoriteId: 'xunzi', score: 20 });
+    expect(store.getProgress().cards).toHaveLength(1);
+    window.localStorage.setItem(store.ROSTER_KEY, '{깨짐');
+    expect(() => store.switchFavorite('austen')).not.toThrow();
+    expect(switchCharacter(store.getProgress(), 'nietzsche', 'x')).toMatchObject({ ...fresh, favoriteId: 'nietzsche' });
+  });
+  it('저장이 막혀도 전환은 된다', () => {
+    nietzscheMidway();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('가득 참');
+    });
+    store.switchFavorite('xunzi');
+    expect(store.getProgress().favoriteId).toBe('xunzi');
+  });
+  it('입덕한 사람의 startOnboarding은 상태를 덮어쓰지 않고 DM으로 간다', () => {
+    nietzscheMidway();
+    const before = store.getProgress();
+    store.startOnboarding('xunzi');
+    expect(store.getProgress()).toMatchObject({ ...fresh, favoriteId: 'xunzi', screen: 'dm' });
+    store.startOnboarding('nietzsche');
+    expect(store.getProgress()).toEqual({ ...before, screen: 'dm' });
+  });
+  it('미입덕자의 startOnboarding은 그대로 신고서로 간다', () => {
+    store.startOnboarding('xunzi');
+    expect(store.getProgress()).toMatchObject({ screen: 'onboarding', favoriteId: 'xunzi' });
+  });
+  it('서버 기록이 다른 작가면 지금 작가 상태를 보존한다', () => {
+    nietzscheMidway();
+    const before = store.getProgress();
+    store.replaceProgress({ ...before, favoriteId: 'xunzi', missionIndex: 0, stage: 'dm', dmRead: false, dmChoiceId: null });
+    expect(store.getProgress().favoriteId).toBe('xunzi');
+    store.switchFavorite('nietzsche');
+    expect(store.getProgress()).toEqual(before);
+  });
+  it('서버 기록이 같은 작가면 빼 두지 않는다', () => {
+    nietzscheMidway();
+    store.replaceProgress({ ...store.getProgress(), score: 100 });
+    expect(window.localStorage.getItem(store.ROSTER_KEY)).toBeNull();
+  });
+  it('초기화하면 빼 둔 상태도 지운다', () => {
+    nietzscheMidway();
+    store.switchFavorite('xunzi');
+    expect(window.localStorage.getItem(store.ROSTER_KEY)).not.toBeNull();
+    store.resetProgress();
+    expect(window.localStorage.getItem(store.ROSTER_KEY)).toBeNull();
+  });
+  it('카드 수는 지금 작가 것만 센다', () => {
+    const cardsOfBoth = [getReading('nietzsche', 0).cardId, getReading('nietzsche', 1).cardId, getReading('xunzi', 0).cardId];
+    const p = { ...createInitial(), cards: cardsOfBoth };
+    expect(favoriteCardCount({ ...p, favoriteId: 'nietzsche' })).toBe(2);
+    expect(favoriteCardCount({ ...p, favoriteId: 'xunzi' })).toBe(1);
+    expect(favoriteCardCount({ ...p, favoriteId: 'austen' })).toBe(0);
+    expect(favoriteCardCount(p)).toBe(0);
+  });
+  it('작가 하나만 한 기존 사용자의 카드 수는 전과 같다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    playMission('nietzsche', 0);
+    expect(favoriteCardCount(store.getProgress())).toBe(store.getProgress().cards.length);
   });
 });
 

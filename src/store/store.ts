@@ -65,12 +65,53 @@ export const goTo = (screen: Screen) => {
   if (snapshot.progress.screen !== screen) commit(rules.moveTo(snapshot.progress, screen));
 };
 
-export const startOnboarding = (favoriteId?: CharacterId) =>
+/** 작가별로 빼 둔 미션 상태. 서버 규칙이 진행 기록의 키를 제한하므로 진행 기록 밖에 이 기기에만 둔다. */
+export const ROSTER_KEY = 'hipdok:roster:v1';
+
+function readRoster(): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(ROSTER_KEY) ?? '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function stashCurrent() {
+  const current = snapshot.progress;
+  if (!current.favoriteId) return;
+  try {
+    window.localStorage.setItem(ROSTER_KEY, JSON.stringify({ ...readRoster(), [current.favoriteId]: rules.missionStateOf(current) }));
+  } catch {
+    /* 저장이 막혀도 전환은 막지 않는다 */
+  }
+}
+
+function switched(id: CharacterId): Progress {
+  const current = snapshot.progress;
+  if (current.favoriteId === id) return current;
+  stashCurrent();
+  return rules.switchCharacter(current, id, readRoster()[id]);
+}
+
+/** 대화할 작가를 바꾼다. 지금 작가의 미션 상태는 빼 두었다가 돌아오면 이어 간다. */
+export function switchFavorite(id: CharacterId): void {
+  commit(switched(id));
+}
+
+/** 이미 입덕한 사람은 신고서를 다시 쓰지 않고 그 작가의 DM으로 바로 간다. */
+export function startOnboarding(favoriteId?: CharacterId) {
+  const { nickname, favoriteId: currentId } = snapshot.progress;
+  if (nickname && currentId) {
+    commit(rules.moveTo(favoriteId ? switched(favoriteId) : snapshot.progress, 'dm'));
+    return;
+  }
   commit({
     ...snapshot.progress,
     screen: 'onboarding',
-    favoriteId: favoriteId ?? snapshot.progress.favoriteId,
+    favoriteId: favoriteId ?? currentId,
   });
+}
 
 export const pickFavorite = (favoriteId: CharacterId) => commit({ ...snapshot.progress, favoriteId });
 
@@ -105,6 +146,8 @@ export const drawCard = () => commit(rules.drawCard(snapshot.progress));
 
 /** 서버의 더 새로운 기록으로 바꾼다. 처음 화면에 있었고 입덕 기록이 왔으면 홈으로 보낸다. */
 export function replaceProgress(next: Progress) {
+  // 다른 작가의 기록이 오면 지금 작가의 미션 상태를 잃지 않게 빼 둔다.
+  if (next.favoriteId !== snapshot.progress.favoriteId) stashCurrent();
   const landed = next.screen === 'landing' && Boolean(next.nickname && next.favoriteId);
   commit(landed ? { ...next, screen: 'home' } : next);
 }
@@ -134,6 +177,7 @@ export function resetProgress(): boolean {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
     window.localStorage.removeItem('hipdok:bond:v1'); // 호감도 장면 기록(store/bond.ts)
+    window.localStorage.removeItem(ROSTER_KEY);
   } catch {
     publish({ ...snapshot, saveFailed: true });
     return false;
