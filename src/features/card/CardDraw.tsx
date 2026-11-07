@@ -45,7 +45,7 @@ export function CardDraw() {
     .reverse();
   const missing = getCardsOf(favoriteId).filter((c) => !progress.cards.includes(c.id));
   const { rankBefore: before, rankNow: after } = ranking;
-  const noFandomGain = ranking.isReal && alreadyClaimed;
+  const noFandomGain = alreadyClaimed;
 
   return (
     <section className="draw">
