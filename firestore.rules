@@ -1,0 +1,127 @@
+rules_version = '2';
+
+// 힙독 규칙. 여기 적지 않은 경로는 전부 거부된다.
+// 미션을 더 만들면 validMission 의 [12] 도 함께 늘려야 한다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function validCharacter(id) {
+      return id in ['siddhartha', 'nietzsche', 'austen', 'xunzi'];
+    }
+    function validMission(characterId, missionId) {
+      return missionId is string && missionId.matches('^reading-' + characterId + '-[12]$');
+    }
+    function fandomPath(characterId) {
+      return /databases/$(database)/documents/fandoms/$(characterId);
+    }
+    function claimPath(missionId) {
+      return /databases/$(database)/documents/users/$(request.auth.uid)/claims/$(missionId);
+    }
+    function shortStringOrNull(value) {
+      return value == null || (value is string && value.size() <= 64);
+    }
+
+    function validProgress(p) {
+      return p is map
+        && p.keys().hasOnly(['nickname', 'favoriteId', 'missionIndex', 'stage', 'dmRead', 'dmChoiceId', 'lastWrongOptionId', 'cards', 'score', 'rewardedMissions'])
+        && p.keys().hasAll(['nickname', 'favoriteId', 'missionIndex', 'stage', 'dmRead', 'dmChoiceId', 'lastWrongOptionId', 'cards', 'score', 'rewardedMissions'])
+        && p.nickname is string && p.nickname.size() <= 20
+        && (p.favoriteId == null || validCharacter(p.favoriteId))
+        && p.missionIndex is int && p.missionIndex >= 0 && p.missionIndex <= 20
+        && p.stage in ['dm', 'reading', 'draw', 'done']
+        && p.dmRead is bool
+        && shortStringOrNull(p.dmChoiceId)
+        && shortStringOrNull(p.lastWrongOptionId)
+        && p.cards is list && p.cards.size() <= 8
+        && p.cards.hasOnly(['card-siddhartha-common','card-siddhartha-rare','card-nietzsche-common','card-nietzsche-rare','card-austen-common','card-austen-rare','card-xunzi-common','card-xunzi-rare'])
+        && p.score is int && p.score >= 0 && p.score <= 100000
+        && p.rewardedMissions is list && p.rewardedMissions.size() <= 8
+        && p.rewardedMissions.hasOnly(['reading-siddhartha-1','reading-siddhartha-2','reading-nietzsche-1','reading-nietzsche-2','reading-austen-1','reading-austen-2','reading-xunzi-1','reading-xunzi-2']);
+    }
+    // 책 한 권씩의 형식은 규칙이 반복문을 못 써서 앱이 받을 때 다시 검사한다. 서고 이름표는 앱 규칙대로 30자.
+    function validLibrary(l) {
+      return l is map
+        && l.keys().hasOnly(['version', 'nickname', 'books'])
+        && l.keys().hasAll(['version', 'nickname', 'books'])
+        && l.version == 1
+        && l.nickname is string && l.nickname.size() >= 1 && l.nickname.size() <= 30
+        && l.books is list && l.books.size() <= 200;
+    }
+    // 기기 시각(ms). 시계가 빠른 기기가 영구히 막히지 않게 서버 시각이 아니라 고정 상한(2100-01-01)과 비교한다.
+    // 앱의 STAMP_MAX 와 같은 값이다. 터무니없는 값만 막으며, 빠른 시각은 그 사람 문서의 충돌 판정에만 쓰인다.
+    function validStamp(t) {
+      return t is int && t >= 0 && t <= 4102444800000;
+    }
+    function validUserShape(d) {
+      return d.keys().hasOnly(['progress', 'progressUpdatedAt', 'library', 'libraryUpdatedAt'])
+        && (('progress' in d) == ('progressUpdatedAt' in d))
+        && (('library' in d) == ('libraryUpdatedAt' in d));
+    }
+    function validProgressPart(d) {
+      return !('progress' in d) || (validProgress(d.progress) && validStamp(d.progressUpdatedAt));
+    }
+    function validLibraryPart(d) {
+      return !('library' in d) || (validLibrary(d.library) && validStamp(d.libraryUpdatedAt));
+    }
+    function touched(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny(keys);
+    }
+
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && validUserShape(request.resource.data)
+        && validProgressPart(request.resource.data)
+        && validLibraryPart(request.resource.data);
+      // 바꾸는 칸만 검사한다. 서버에 옛 형식이 남아 있어도 다른 칸의 동기화가 막히지 않는다.
+      allow update: if isOwner(uid)
+        && validUserShape(request.resource.data)
+        && (!touched(['progress', 'progressUpdatedAt']) || validProgressPart(request.resource.data))
+        && (!touched(['library', 'libraryUpdatedAt']) || validLibraryPart(request.resource.data));
+      // 개인 기록 삭제 경로. claims 는 남아 같은 계정의 팬덤 점수가 두 번 오르지 않는다.
+      allow delete: if isOwner(uid);
+
+      // 미션 보상을 받았다는 표시. 초기화해도 남아 팬덤 점수가 두 번 오르지 않는다. 고치거나 지울 수 없다.
+      match /claims/{missionId} {
+        allow get: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['characterId', 'missionId', 'createdAt'])
+          && request.resource.data.keys().hasAll(['characterId', 'missionId', 'createdAt'])
+          && validCharacter(request.resource.data.characterId)
+          && validMission(request.resource.data.characterId, missionId)
+          && request.resource.data.missionId == missionId
+          && request.resource.data.createdAt == request.time
+          && exists(fandomPath(request.resource.data.characterId))
+          && getAfter(fandomPath(request.resource.data.characterId)).data.score
+             == get(fandomPath(request.resource.data.characterId)).data.score + 20
+          && getAfter(fandomPath(request.resource.data.characterId)).data.lastMissionId == missionId;
+      }
+    }
+
+    // 팬덤 점수. 닉네임이나 사용자 표시는 두지 않는다.
+    // lastMissionId 는 규칙이 이번에 만들어진 claim 을 찾아가는 데 필요한 값이다.
+    match /fandoms/{characterId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && validCharacter(characterId)
+        && request.resource.data.keys().hasOnly(['score'])
+        && request.resource.data.score is int
+        && request.resource.data.score == 0;
+      allow update: if signedIn()
+        && validCharacter(characterId)
+        && request.resource.data.keys().hasOnly(['score', 'lastMissionId'])
+        && request.resource.data.score is int
+        && request.resource.data.score == resource.data.score + 20
+        && request.resource.data.keys().hasAll(['score', 'lastMissionId'])
+        && validMission(characterId, request.resource.data.lastMissionId)
+        && !exists(claimPath(request.resource.data.lastMissionId))
+        && existsAfter(claimPath(request.resource.data.lastMissionId))
+        && getAfter(claimPath(request.resource.data.lastMissionId)).data.characterId == characterId;
+    }
+  }
+}

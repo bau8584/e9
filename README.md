@@ -2,13 +2,13 @@
 
 **문학에도 최애가 있다.**
 
-작가·철학자 팬덤과 개인 독서 공간을 결합한 성인용 웹앱 프로토타입입니다. 최애 캐릭터를 만나고, 내가 읽은 책과 문장·감상을 개인 서고에 모을 수 있습니다.
+작가·철학자 팬덤과 개인 독서 공간을 결합한 성인용 웹앱입니다. 최애를 고르고, DM에 답하고, 원문을 읽고 문제를 맞혀 문장 카드를 뽑습니다. 읽은 책과 문장·감상은 내 방의 개인 서고에 모입니다.
 
 ![니체 저서를 배치한 개인 서고](docs/desktop-nietzsche-covers-preview.jpg)
 
 ## 바로 실행
 
-저장소를 다운로드한 뒤 **`힙독.html`을 Chrome 또는 Edge로 열면** 실행됩니다. 앱 코드와 캐릭터·도서 표지 이미지를 파일 하나에 포함했습니다. API 키가 필요하지 않습니다.
+저장소를 다운로드한 뒤 **`힙독.html`을 Chrome 또는 Edge로 열면** 실행됩니다. 앱 코드와 캐릭터·도서 표지 이미지를 파일 하나에 포함했습니다. 비밀 키가 필요하지 않습니다. 이렇게 파일로 열면 서버 동기화 없이 이 브라우저에서만 동작합니다.
 
 로컬 파일의 저장 정책은 브라우저마다 다를 수 있습니다. 계속 이용할 때에는 아래 개발 서버 또는 정적 호스팅을 사용하고 중요한 기록은 JSON으로 백업해 주세요.
 
@@ -24,14 +24,17 @@ npm run dev
 기본 주소는 `http://127.0.0.1:5174`입니다.
 
 ```sh
-npm test                  # 데이터 검증 테스트 11개
+npm test                  # 서고 테스트 11개 + 앱 테스트 (Node 22 이상)
+npm run test:rules        # Firestore 규칙 테스트 (에뮬레이터, Java 11 이상 필요. 실제 DB에 닿지 않음)
+npm run typecheck         # TypeScript 검사
 npm run build             # TypeScript 검사 및 프로덕션 빌드
 npm run build:standalone  # 이미지까지 포함한 힙독.html 생성
 ```
 
 ## 구현한 기능
 
-- 홈에서 내 방으로 이동하는 반응형 화면
+- 첫 화면, 입덕(닉네임과 최애), 팬 배지, 홈, DM, 원문 읽기와 문제, 문장 카드, 팬덤 점수와 순위
+- 하단(넓은 화면은 왼쪽) 메뉴: 홈, DM, 읽기, 내 방
 - 입체 개인 서고, 아바타 이동, 장르별 책장
 - 읽은 책 등록, 제목·저자 검색, 정렬
 - 완독일·문장·감상 저장과 수정, 닉네임 설정, JSON 백업
@@ -42,20 +45,83 @@ npm run build:standalone  # 이미지까지 포함한 힙독.html 생성
 
 ## 데이터와 시연 범위
 
-- 개인 기록은 해당 브라우저의 `hipdok.library.v1`에 저장됩니다. 서버 로그인이나 기기 간 동기화는 없습니다.
+- 서고 기록은 `hipdok.library.v1`, 입덕과 진행 기록은 `hipdok:v1`에 각각 저장됩니다. 브라우저 기록이 기준 사본이고, 익명 로그인으로 Firestore에 동기화합니다. 회원가입은 없고, 서고는 본인만 읽습니다. 연결이 안 되면 로컬로 동작하고 조용히 다시 시도합니다.
+- 닉네임: 서고 기록이 아직 없으면 입덕 닉네임을 이름표 초기값으로 씁니다. 이미 저장된 서고 이름은 덮어쓰지 않습니다. 내 방에서 이름을 바꾸면 입덕 닉네임도 같이 바뀝니다.
 - 예시 서고의 9권은 개인 기록과 분리되며 자동으로 저장되지 않습니다.
-- 팬덤 순위·팬클럽 게시물·AI 메시지는 콘셉트 시연입니다. 실시간 경쟁, 실제 커뮤니티 서버, 실시간 AI 답변은 연결하지 않았습니다.
-- 캐릭터와 대화는 창작적 재해석이며 실제 인물의 발언을 뜻하지 않습니다.
+- 팬덤 순위는 연결되면 참여 기록을 모은 점수("실시간 참여 집계"), 연결이 안 되거나 `힙독.html`을 파일로 열면 "예시 점수"로 표시합니다.
+- DM과 인물 대사는 "제작진 각색"이며 실제 인물의 발언이 아닙니다. 콘텐츠 검수 상태는 `docs/콘텐츠-검수표.md`, 필요한 그림은 `docs/이미지-목록.md`에 있습니다.
 - 도서 표지는 판본과 출처를 함께 표시합니다. [이미지 자산과 표지 출처](ASSETS.md)를 참고하세요.
 - 책사이의 공간과 가구 스타일을 재사용했습니다. 원본 책사이는 이 저장소에 포함하지 않습니다.
 
-## 주요 파일
+## 구조
 
-- `src/main.tsx`: 홈·개인 서고·도서 등록과 상세 화면
-- `src/library.mjs`: 저장, 검증, 검색·집계, 책사이 가져오기
-- `src/editions.mjs`, `src/covers.ts`: 판본 정보와 실제 표지 연결
-- `src/room.css`, `src/style.css`: 입체 공간과 반응형 스타일
-- `tests/library.test.mjs`: 개인 데이터 보존과 판본 연결 테스트
-- `docs/VERIFICATION.md`: 검증 내용과 한계
+```
+src/
+  main.tsx            시작점
+  app/App.tsx         화면 전환. 입덕 전에는 메뉴 없음
+  components/         여러 기능이 같이 쓰는 조각(메뉴, 초상, 문장 카드, 순위)
+  styles/global.css   색 값, 초기화, 메뉴. 묶이지 않는 유일한 CSS
+  styles/fandom.css   입덕 쪽 화면 공통
+  data/               인물, DM, 원문과 문제, 카드, 예시 순위
+  store/              진행 기록(progress.ts 규칙, store.ts 저장). 키 hipdok:v1
+  features/
+    landing, onboarding, home, dm, reading, card
+    my-room/          내 방
+      MyRoomPage      화면 틀
+      RoomView, Room  서고 화면과 입체 방
+      LibraryDialogs, Dialog, Cover  책 등록, 상세, 이름 팝업
+      useLibrary, storage, libraryData  서고 상태와 저장, 책장 정의
+      myRoomData      내 방이 입덕 쪽 기록(카드, 점수, 최애)을 읽는 유일한 창구
+      theme.css       앱 색에 맞춘 덮어쓰기
+  library.mjs, editions.mjs, covers.ts, legacy-data.ts  서고 저장 규칙과 표지
+  sync/               Firebase 연결(firebaseConfig 공개 설정, merge 합치는 규칙, sync 동기화와 순위 구독)
+  room.css, style.css  내 방 담당의 서고 스타일(원본 유지)
+```
 
-기술 구성: React 19, TypeScript, Vite, lucide-react.
+### Firebase 구조
+
+| 경로 | 내용 | 권한 |
+|---|---|---|
+| `users/{uid}` | `progress`(입덕 진행), `progressUpdatedAt`, `library`(서고, 기기 형식 그대로), `libraryUpdatedAt` | 본인만 읽고 쓰기, 문서 전체 삭제 가능 |
+| `users/{uid}/claims/{missionId}` | 미션 보상 표시. 초기화해도 남음 | 본인만 읽기, 새로 만들기만 |
+| `fandoms/{characterId}` | `score`, `lastMissionId`. 닉네임 없음 | 누구나 읽기. 0으로 생성, claim과 함께 +20만 |
+
+- 충돌: 진행은 수정 시각이 늦은 쪽, 서고는 책 합집합(같은 책은 늦게 고친 쪽). 동기화 상태는 `hipdok:sync:v1`.
+- 규칙은 `firestore.rules`. 미션이나 카드를 늘리면 규칙의 미션 번호 `[12]`, 카드와 미션 목록, 개수 상한도 늘린다.
+- 규칙에 없는 옛 카드, 미션 id는 기기에 그대로 두고 서버에 올릴 때만 뺀다. 시각은 고정 상한(2100-01-01)과 비교해 시계가 빠른 기기도 막히지 않는다. 대신 시계가 빠른 기기의 기록이 그 시각까지 충돌에서 이긴다.
+- 서고가 200권이나 약 900KB를 넘으면 서고만 서버에 올리지 않는다. 기기 기록은 유지하고 내 방에 짧게 안내한다. 실패한 동기화는 5초부터 두 배씩, 최대 5분 간격으로 다시 시도한다.
+
+### 순위 조작의 한계
+
+순위는 공정한 집계가 아니라 **참여 집계**입니다. 규칙만으로는 아래를 막지 못합니다.
+
+- **익명 계정 증식**: 사이트 데이터를 지우거나 스크립트로 계정을 새로 만들면 계정마다 같은 미션을 다시 적립할 수 있습니다.
+- **미션 미완료 수령**: 규칙은 미션을 실제로 끝냈는지 알 수 없어, 직접 요청을 보내면 읽지 않고도 점수를 받을 수 있습니다.
+
+규칙이 막는 것은 +20 외의 점수 변경, 같은 계정의 중복 수령, 점수 삭제입니다. 상금이나 상품을 걸지 말고, 대회 뒤 공정성이 필요해지면 Cloud Functions(유료 Blaze 요금제)로 옮겨 서버가 미션 완료를 확인하고 점수를 올리게 합니다. 이때 App Check로 자동 요청도 함께 줄입니다.
+
+### CSS를 나눈 방법
+
+서고와 입덕 쪽이 같은 클래스 이름(`.tag`, `.brand` 등)을 쓴다. 원본을 고치지 않도록 빌드 때 `scripts/scope-css.mjs`가 자동으로 묶는다.
+
+| 파일 위치 | 묶이는 곳 |
+|---|---|
+| `src/room.css`, `src/style.css`, `src/features/my-room/` | `.my-room-scope` |
+| `src/styles/global.css` | 묶지 않음 |
+| 그 밖의 `src/` CSS | `.fandom-scope` |
+
+새 CSS 파일은 자기 기능 폴더에 두면 된다. 입덕 쪽 조각을 내 방에 보일 때는 `<div className="fandom-scope">`로 감싼다(문장 카드가 그 예).
+
+### 나눠 고칠 때
+
+| 담당 | 고치는 곳 | 건드리지 않는 곳 |
+|---|---|---|
+| A (미션 추가) | `src/data/`, `src/features/reading/`, `src/features/card/`, `src/store/` | `src/features/my-room/` |
+| B (카드 전시) | `src/features/my-room/` | `src/data/`, `src/store/`, reading, card |
+
+- B는 카드를 `myRoomData.ts`의 `useMyRoomData()`로 읽고, 그림은 `components/QuoteCardView`를 그대로 쓴다.
+- A가 진행 기록 모양을 바꿔도 `myRoomData.ts`의 함수 이름과 돌려주는 모양은 유지한다.
+- `components/`, `styles/`, `app/`, `package.json`을 꼭 고쳐야 하면 상대에게 먼저 알린다.
+- 서고 쪽에서 바꾸지 않는 것: `room.css`의 내용, `library.mjs`, 저장 키, 저장 형식.
+
+기술 구성: React 19, TypeScript, Vite, Vitest, lucide-react, Firebase(익명 인증, Firestore).

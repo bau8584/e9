@@ -5,10 +5,27 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5174",
-    "build": "tsc -b && vite build",
-    "test": "node --test tests/library.test.mjs",
-    "build:standalone": "npm run build && node scripts/standalone.mjs"
+    "build": "tsc --noEmit && vite build",
+    "test": "node --test tests/library.test.mjs && vitest run",
+    "build:standalone": "npm run build && node scripts/standalone.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-hipdok \"vitest run --config vitest.rules.config.ts\""
   },
-  "dependencies": {"react": "^19.0.0", "react-dom": "^19.0.0", "lucide-react": "^0.468.0"},
-  "devDependencies": {"@types/react": "^19.0.0", "@types/react-dom": "^19.0.0", "@vitejs/plugin-react": "^4.3.4", "typescript": "~5.7.2", "vite": "^6.0.5"}
+  "dependencies": {
+    "firebase": "^11.10.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "firebase-tools": "^13.35.1",
+    "jsdom": "^26.1.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^3.2.7"
+  }
 }

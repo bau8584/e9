@@ -1,0 +1,12 @@
+.dm-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.dm-avatar { width: 52px; height: 52px; flex: none; border-radius: 50%; overflow: hidden; }
+.dm-avatar .monogram { font-size: 1.3rem; }
+.dm-who { min-width: 0; }
+.dm-name { margin: 0 0 2px; font-family: var(--serif); font-size: 1.25rem; }
+.dm-thread { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; }
+.bubble { margin: 0; padding: 10px 14px; max-width: 86%; line-height: 1.55; overflow-wrap: anywhere; word-break: keep-all; border-radius: 14px; }
+.bubble-them { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubble-me { align-self: flex-end; background: var(--purple); color: var(--on-deep); border-bottom-right-radius: 4px; }
+.dm-replies { display: flex; flex-direction: column; gap: 8px; }
+.dm-replies-label { margin: 0; font-size: .85rem; font-weight: 700; color: var(--muted); }
+.btn-reply { text-align: left; background: var(--surface); color: var(--purple); border: 1.5px solid var(--purple); font-weight: 500; word-break: keep-all; }
