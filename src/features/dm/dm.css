@@ -21,3 +21,10 @@
 .dm-replies-label { margin: 0; font-size: .85rem; font-weight: 700; color: var(--muted); }
 .btn-reply { text-align: left; background: var(--surface); color: var(--purple); border: 1.5px solid var(--purple); font-weight: 500; word-break: keep-all; }
 .dm-relation { margin: 0 0 4px; font-size: .8rem; color: var(--purple); font-weight: 700; word-break: keep-all; }
+
+.bubble-row { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 92%; min-width: 0; }
+.bubble-row .bubble { max-width: 100%; min-width: 0; }
+.bubble-avatar, .bubble-avatar-gap { width: 36px; height: 36px; flex: none; }
+.bubble-avatar { border-radius: 50%; overflow: hidden; }
+.bubble-avatar .portrait { width: 100%; height: 100%; }
+.bubble-avatar .monogram { font-size: .9rem; }

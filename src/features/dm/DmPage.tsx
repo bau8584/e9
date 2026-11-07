@@ -63,6 +63,16 @@ function DmConversation() {
     chooseReply(replyId);
   };
 
+  // 인물이 말을 시작할 때만 얼굴을 보여 주고, 이어지는 말풍선은 같은 줄에 맞춘다.
+  const avatar = (show: boolean) =>
+    show ? (
+      <span aria-hidden="true" className="bubble-avatar">
+        <Portrait character={character} stage={bondStage} />
+      </span>
+    ) : (
+      <span aria-hidden="true" className="bubble-avatar-gap" />
+    );
+
   return (
     <div className="page dm">
       <header className="dm-head">
@@ -79,26 +89,31 @@ function DmConversation() {
         </div>
       </header>
       <div className="dm-thread" aria-live="polite" onClick={done ? undefined : skip}>
-        {messages.slice(0, arrival.visibleCount).map((text) => (
-          <p key={text} className={playArrival ? 'bubble bubble-them bubble-in' : 'bubble bubble-them'}>
-            {text}
-          </p>
+        {messages.slice(0, arrival.visibleCount).map((text, index) => (
+          <div key={text} className="bubble-row">
+            {avatar(index === 0)}
+            <p className={playArrival ? 'bubble bubble-them bubble-in' : 'bubble bubble-them'}>{text}</p>
+          </div>
         ))}
         {chosen && (
           <>
             <p className={playAnswer ? 'bubble bubble-me bubble-in' : 'bubble bubble-me'}>{chosen.text}</p>
-            {chosen.answer.slice(0, answer.visibleCount).map((text) => (
-              <p key={text} className={playAnswer ? 'bubble bubble-them bubble-in' : 'bubble bubble-them'}>
-                {text}
-              </p>
+            {chosen.answer.slice(0, answer.visibleCount).map((text, index) => (
+              <div key={text} className="bubble-row">
+                {avatar(index === 0)}
+                <p className={playAnswer ? 'bubble bubble-them bubble-in' : 'bubble bubble-them'}>{text}</p>
+              </div>
             ))}
           </>
         )}
         {phase === 'typing' && (
-          <div className="bubble bubble-them bubble-typing" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+          <div className="bubble-row">
+            {avatar((arrival.done ? answer.visibleCount : arrival.visibleCount) === 0)}
+            <div className="bubble bubble-them bubble-typing" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         )}
         <div ref={endRef} />
