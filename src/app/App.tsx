@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { DiscoveryDialog } from '../features/discovery/DiscoveryDialog';
 import { BottomNav } from '../components/BottomNav';
 import { SaveBanner } from '../components/SaveBanner';
 import { DmPage } from '../features/dm/DmPage';
@@ -16,6 +17,7 @@ import '../styles/motion.css';
 const MAIN_SCREENS: Screen[] = ['home', 'dm', 'reading', 'myroom'];
 
 export function App() {
+  const [tasteOpen, setTasteOpen] = useState(false);
   const { progress, saveFailed } = useSnapshot();
   const { screen } = progress;
   const withNav = MAIN_SCREENS.includes(screen);
@@ -67,6 +69,13 @@ export function App() {
           <main className={withNav ? 'with-nav' : undefined}>
             {/* 읽기는 집중하는 화면이라 위치 이동 없이 살짝만 나타난다 */}
             <div key={screen} className={screen === 'reading' ? 'hd-screen-quiet' : 'hd-screen'}>
+              {(screen === 'landing' || screen === 'home') && (
+                <section className="panel" aria-label="독서 취향 검사" style={{maxWidth: 600, margin: '16px auto', padding: 16}}>
+                  <h2 className="section-title">나의 독서 MBTI</h2>
+                  <p className="mission-text">12개의 질문으로 나와 취향이 맞는 철학자를 만나 보세요.</p>
+                  <button className="btn btn-primary btn-block" type="button" onClick={() => setTasteOpen(true)}>내 유형 찾기</button>
+                </section>
+              )}
               {screen === 'landing' && <LandingPage />}
               {screen === 'onboarding' && <OnboardingPage />}
               {screen === 'badge' && <BadgePage />}
@@ -77,6 +86,7 @@ export function App() {
           </main>
         </div>
       )}
+      {tasteOpen && <div className="fandom-scope"><DiscoveryDialog onClose={() => setTasteOpen(false)} /></div>}
       {withNav && <BottomNav />}
     </>
   );
