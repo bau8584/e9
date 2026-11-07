@@ -10,6 +10,8 @@
   display: flex; flex-direction: column; gap: 4px; width: 100%; min-height: 72px; padding: 14px 16px; text-align: left; font: inherit;
   color: var(--ink); background: var(--surface); border: 1.5px solid var(--purple); border-radius: var(--r-control); cursor: pointer;
 }
+.dm-banner-arrive { animation: dm-arrive .32s ease-out .7s both; }
+@keyframes dm-arrive { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 .dm-banner-label { font-size: .8rem; font-weight: 700; color: var(--purple); }
 .dm-banner-text { overflow-wrap: anywhere; word-break: keep-all; }
 .mission-title { margin: 8px 0 2px; font-family: var(--serif); font-size: 1.15rem; font-weight: 700; }

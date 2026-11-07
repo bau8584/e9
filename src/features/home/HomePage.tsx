@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Portrait } from '../../components/Portrait';
 import { RankingList, useRanking } from '../../components/RankingList';
 import { getCharacter, getDm, getMissionCount, getReading } from '../../data';
@@ -11,9 +12,18 @@ const missionAction: Record<Exclude<Stage, 'done'>, { text: string; label: strin
   draw: { text: '정답이에요. 카드가 기다리고 있어요.', label: '카드 뽑기', screen: 'reading' },
 };
 
+// 새 DM 배너의 도착 효과는 미션마다 한 번만. 저장하지 않으므로 새로고침하면 다시 보인다.
+const arrivedBanners = new Set<string>();
+
 export function HomePage() {
   const { progress } = useSnapshot();
   const ranking = useRanking(progress.favoriteId, progress.score);
+  const [arriving] = useState(() => {
+    const key = `${progress.favoriteId}:${progress.missionIndex}`;
+    if (progress.dmRead || arrivedBanners.has(key)) return false;
+    arrivedBanners.add(key);
+    return true;
+  });
   if (!progress.favoriteId || !ranking) return null;
   const character = getCharacter(progress.favoriteId);
   const dm = getDm(character.id, progress.missionIndex);
@@ -59,7 +69,7 @@ export function HomePage() {
         </section>
       )}
 
-      <button type="button" className="dm-banner" onClick={() => goTo('dm')}>
+      <button type="button" className={arriving ? 'dm-banner dm-banner-arrive' : 'dm-banner'} onClick={() => goTo('dm')}>
         <span className="dm-banner-label">{progress.dmChoiceId ? `${character.nameWith}의 DM` : `새 DM, ${character.name}`}</span>
         <span className="dm-banner-text">{dm.preview}</span>
       </button>
