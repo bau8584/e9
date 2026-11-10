@@ -1,0 +1,8 @@
+.buy-link { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 12px 0; }
+.buy-link-btn { display: inline-block; text-align: center; text-decoration: none; font-family: var(--serif); font-weight: 700; border: 2px solid var(--gold); background: transparent; color: var(--purple); }
+.buy-link-note { color: var(--ink); opacity: 0.65; font-size: 0.8rem; }
+
+.share-card { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 12px 0; }
+.share-card-btn { width: 100%; max-width: 320px; }
+.share-card-btn[disabled] { opacity: 0.6; }
+.share-card-note { min-height: 1.2em; font-size: 0.85rem; color: var(--ink); opacity: 0.8; }

@@ -23,9 +23,9 @@
 .dm-relation { margin: 0 0 4px; font-size: .8rem; color: var(--purple); font-weight: 700; word-break: keep-all; }
 
 
-/* 게임 대화 장면: 인물을 크게 세우고 그 옆(폰은 아래)에서 대화가 이어진다. */
+/* 메신저 대화방: 위(넓은 화면은 옆)에 인물, 아래로 대화방, 대화 목록, 대화 시간이 이어진다. */
 .page.dm { display: flex; flex-direction: column; gap: 0; }
-.dm-stage { position: sticky; top: 0; z-index: 2; height: min(50dvh, 460px); margin: 0 -16px; overflow: hidden; background: var(--purple); }
+.dm-stage { position: relative; z-index: 2; height: min(36dvh, 300px); margin: 0 -16px; overflow: hidden; background: var(--purple); }
 .dm-portrait { position: absolute; inset: 0; width: 100%; height: 100%; }
 .dm-portrait img { object-position: 50% 15%; }
 .dm-portrait.portrait-wide img { object-position: 82% 20%; }
@@ -37,10 +37,69 @@
 .dm-talk { min-width: 0; }
 .dm-switcher { max-width: 560px; margin: 0 auto; padding: 12px var(--gutter) 0; }
 .dm-switcher:empty { display: none; }
+
+/* 선택 대화 목록 */
+.dm-talk { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; scroll-margin-top: 12px; }
+.dm-rest { display: flex; flex-direction: column; gap: 24px; }
+.dm-rest[hidden] { display: none; }
+.dm-list-wrap { scroll-margin-top: 12px; }
+.dm-list { display: flex; flex-direction: column; gap: 10px; }
+.dm-list-title { margin-top: 4px; }
+.dm-list-note { margin: 0; font-size: .88rem; color: var(--muted); word-break: keep-all; }
+.dm-new { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; padding: 16px; text-align: left; font: inherit; color: var(--on-deep); background: var(--deep); border: 0; border-left: 4px solid var(--gold); border-radius: var(--r-card); cursor: pointer; }
+.dm-new:hover { background: var(--purple); }
+.dm-new-tag { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; color: var(--gold-soft); }
+.dm-new-tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: dm-pulse 1.6s ease-in-out infinite; }
+.dm-new-title { font-family: var(--serif); font-size: 1.15rem; font-weight: 700; word-break: keep-all; }
+.dm-new-preview { font-size: .92rem; line-height: 1.5; color: var(--on-deep-muted); word-break: keep-all; }
+.dm-new-cta { margin-top: 6px; padding: 8px 14px; font-size: .88rem; font-weight: 700; color: var(--deep); background: var(--gold-soft); border-radius: 999px; }
+@keyframes dm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.dm-eps { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.dm-ep { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 64px; padding: 10px 2px; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.dm-ep:hover:not(:disabled) { background: var(--surface); }
+.dm-ep-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.dm-ep-title { font-weight: 700; word-break: keep-all; }
+.dm-ep-preview { overflow: hidden; font-size: .86rem; color: var(--muted); white-space: nowrap; text-overflow: ellipsis; }
+.dm-ep-status { flex: none; font-size: .78rem; font-weight: 700; color: var(--purple); }
+.dm-ep-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); }
+.dm-ep.is-locked { cursor: default; }
+.dm-ep.is-locked .dm-ep-title { font-weight: 500; color: var(--muted); }
+.dm-ep.is-locked .dm-ep-title::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border: 1.5px solid var(--line-strong); border-radius: 2px; vertical-align: 0; }
+
+/* 선택 대화 진행 */
+.dm-episode { display: flex; flex-direction: column; gap: 4px; }
+.dm-episode-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.dm-back { min-height: 44px; padding: 0 4px; font: inherit; font-size: .88rem; font-weight: 700; color: var(--purple); background: none; border: 0; cursor: pointer; }
+.dm-episode-title { margin: 0; min-width: 0; font-family: var(--serif); font-weight: 700; text-align: right; word-break: keep-all; }
+.dm-episode-end { display: flex; flex-direction: column; gap: 12px; }
+.dm-episode-more { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dm-episode-more .btn { text-align: center; padding-inline: 8px; }
+
+/* 받은 것 */
+.dm-reward { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: var(--surface); border: 1.5px solid var(--gold); border-radius: var(--r-card); }
+.dm-reward-title { margin: 0; font-size: .85rem; font-weight: 700; color: var(--gold); }
+.dm-reward-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dm-reward-list li { padding: 4px 10px; font-size: .88rem; font-weight: 700; color: var(--purple); background: #ece3f4; border-radius: 999px; }
+
+/* 대화 시간 */
+.dm-time { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--surface); border: 1.5px solid var(--gold-soft); border-radius: var(--r-card); }
+.dm-time.is-first { order: -1; border-color: var(--gold); }
+.dm-time-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dm-time-pips { display: inline-flex; gap: 5px; }
+.dm-time-pips span { width: 12px; height: 12px; border: 1.5px solid var(--gold); border-radius: 50%; }
+.dm-time-pips span.is-on { background: var(--gold); }
+.dm-time-line { margin: 0; line-height: 1.55; word-break: keep-all; }
+.dm-time-go { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dm-time-go .btn { text-align: center; padding-inline: 8px; }
+.dm-time-end { display: flex; flex-direction: column; gap: 12px; }
+.dm-topic { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--line-strong); }
+.dm-topic-label { margin: 0; font-size: .82rem; font-weight: 700; color: var(--purple); word-break: keep-all; }
+
 @media (min-width: 900px) {
   .dm-switcher { max-width: 1040px; }
   .page.dm { display: grid; grid-template-columns: minmax(340px, 42%) minmax(0, 1fr); gap: 28px; align-items: start; max-width: 1040px; }
-  .dm-stage { top: 16px; height: auto; aspect-ratio: 4 / 5; max-height: calc(100dvh - 32px); margin: 0; border-radius: 14px; }
+  .dm-stage { position: sticky; top: 16px; height: auto; aspect-ratio: 4 / 5; max-height: calc(100dvh - 32px); margin: 0; border-radius: 14px; }
+  .dm-talk { padding-top: 0; }
   .dm-stage .dm-name { font-size: 2rem; }
   .dm-thread { padding-top: 0; }
 }

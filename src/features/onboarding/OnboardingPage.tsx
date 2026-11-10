@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { characters, PLAYABLE_IDS } from '../../data';
 import { cleanNickname, EMPTY_NICKNAME_MESSAGE, NICKNAME_MAX } from '../../store/progress';
 import { completeOnboarding, pickFavorite, readNicknameDraft, saveNicknameDraft, useSnapshot } from '../../store/store';
+import { Portrait } from '../../components/Portrait';
 import { savedLibraryNickname } from '../my-room/storage';
 import './onboarding.css';
 
@@ -9,6 +10,8 @@ export function OnboardingPage() {
   const { progress } = useSnapshot();
   const [nickname, setNickname] = useState(() => readNicknameDraft() || progress.nickname || cleanNickname(savedLibraryNickname()));
   const [error, setError] = useState('');
+  const [changing, setChanging] = useState(false);
+  const picked = characters.find((c) => c.id === progress.favoriteId);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -46,6 +49,13 @@ export function OnboardingPage() {
       />
       <fieldset className="favorite-field">
         <legend className="field-label">최애</legend>
+        {picked && !changing ? (
+          <div className="favorite-picked">
+            <span className="favorite-picked-portrait"><Portrait character={picked} /></span>
+            <span className="favorite-picked-name">{picked.name}</span>
+            <button type="button" className="favorite-change" onClick={() => setChanging(true)}>바꾸기</button>
+          </div>
+        ) : (
         <div className="favorite-grid">
           {/* 예전에 골라 둔 인물이 있으면 그 사람 화면에서는 그대로 보인다. */}
           {characters.filter((c) => PLAYABLE_IDS.includes(c.id) || c.id === progress.favoriteId).map((c) => (
@@ -64,6 +74,7 @@ export function OnboardingPage() {
             </button>
           ))}
         </div>
+        )}
       </fieldset>
       <p id="onboarding-error" className="form-error" role="alert">
         {error}

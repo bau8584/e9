@@ -1,10 +1,11 @@
-/* 내 문장 카드 구역, 이름 안내, 초기화 확인 창. 스코프는 빌드 때 .my-room-scope 로 묶인다. */
+/* 내 카드 구역(팩, 앨범), 이름 안내, 초기화 확인 창. 스코프는 빌드 때 .my-room-scope 로 묶인다. */
 .my-cards { margin: 28px 0; padding: 22px; background: #fffdf7; border: 1px solid rgba(42, 17, 71, .14); border-radius: 12px; min-width: 0; }
 .my-cards-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; padding: 12px 16px; background: #fffdf7; border: 1px solid rgba(42, 17, 71, .14); border-radius: 10px; color: #2a1147; }
 .my-cards-summary p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; min-width: 0; }
 .my-cards-summary div { display: flex; flex-wrap: wrap; gap: 8px; }
 .my-cards-summary button { min-height: 44px; }
 .my-cards { scroll-margin-top: 12px; }
+.my-cards-pack, .my-cards-album { margin-top: 16px; }
 .my-cards-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .my-cards-head h2 { margin: 4px 0 0; color: #2a1147; font-size: 1.4rem; }
 .my-cards-head h2 span { margin-left: 8px; color: #4b1f78; font-size: 1rem; }

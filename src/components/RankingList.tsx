@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
-import { REWARD_SCORE, type CharacterId } from '../data';
+import { PLAYABLE_IDS, REWARD_SCORE, type CharacterId } from '../data';
 import { computeRanking, computeRealRanking, type RankRow } from '../store/progress';
 import { useFandomScores } from '../sync/sync';
 import { motionOff } from './motion';
@@ -19,6 +19,12 @@ export interface Ranking {
   rankNow: number;
 }
 
+/** 입덕할 수 없는 인물(준비 중)은 순위표에서 빼고 등수를 다시 매긴다. 내 최애는 옛 기록이어도 남긴다. */
+const playableOnly = (rows: RankRow[]): RankRow[] => {
+  const kept = rows.filter((r) => r.isFavorite || PLAYABLE_IDS.includes(r.id));
+  return kept.map((r) => ({ ...r, rank: kept.findIndex((o) => o.score === r.score) + 1 }));
+};
+
 const rankIn = (rows: RankRow[]) => rows.find((r) => r.isFavorite)?.rank ?? 0;
 
 /** 실제 점수가 오면 그것으로, 연결이 안 되면 예시 점수로 줄을 세운다. 화면에 있는 동안만 구독한다. */
@@ -26,12 +32,13 @@ export function useRanking(favoriteId: CharacterId | null, score: number): Ranki
   const scores = useFandomScores();
   if (!favoriteId) return null;
   if (scores) {
-    const rows = computeRealRanking(favoriteId, scores);
+    const rows = playableOnly(computeRealRanking(favoriteId, scores));
     const lower = { ...scores, [favoriteId]: Math.max(0, scores[favoriteId] - REWARD_SCORE) };
-    return { rows, isReal: true, rankBefore: rankIn(computeRealRanking(favoriteId, lower)), rankNow: rankIn(rows) };
+    return { rows, isReal: true, rankBefore: rankIn(playableOnly(computeRealRanking(favoriteId, lower))), rankNow: rankIn(rows) };
   }
-  const rows = computeRanking(favoriteId, score);
-  return { rows, isReal: false, rankBefore: rankIn(computeRanking(favoriteId, Math.max(0, score - REWARD_SCORE))), rankNow: rankIn(rows) };
+  const rows = playableOnly(computeRanking(favoriteId, score));
+  const before = playableOnly(computeRanking(favoriteId, Math.max(0, score - REWARD_SCORE)));
+  return { rows, isReal: false, rankBefore: rankIn(before), rankNow: rankIn(rows) };
 }
 
 const RISE_MS = 700;

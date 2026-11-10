@@ -1,10 +1,12 @@
-// 내 방의 카드 구역, 초기화, 이름 안내 시험. 화면을 실제로 그려 눌러 본다.
+// 내 방의 카드 구역(팩, 앨범, 옛 카드), 초기화, 이름 안내 시험. 화면을 실제로 그려 눌러 본다.
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cards as allCards, getDm, getReading } from '../../data';
 import { STORAGE_KEY as LIBRARY_KEY } from '../../library.mjs';
+import * as fan from '../../store/fan';
 import * as store from '../../store/store';
+import { fanCardsOf } from '../../data/fancards';
 import { MyRoomPage } from './MyRoomPage';
 import { cardShareText, groupCards, namesDiffer } from './myRoomData';
 
@@ -30,10 +32,11 @@ const click = (text: string) => act(() => { [...host.querySelectorAll('button')]
 beforeEach(() => {
   localStorage.clear();
   store.resetProgress();
+  fan.resetFan();
   host = document.body.appendChild(document.createElement('div'));
   root = createRoot(host);
 });
-afterEach(() => { act(() => root.unmount()); host.remove(); });
+afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers(); });
 
 describe('카드 묶기', () => {
   it('최애를 맨 앞에 두고, 인물당 여러 장이어도 한 묶음으로 모은다', () => {
@@ -51,23 +54,54 @@ describe('카드 묶기', () => {
   });
 });
 
-describe('내 문장 카드 구역', () => {
-  it('카드가 없으면 첫 미션 안내가 나오고 누르면 DM으로 간다', () => {
+describe('내 카드 구역(팩과 앨범)', () => {
+  it('입덕하면 팩 1개가 보이고, 열면 3장이 차례로 공개되어 앨범에 들어간다', () => {
+    vi.useFakeTimers();
     store.completeOnboarding('덕구', 'nietzsche');
     show();
-    expect(host.textContent).toContain('아직 뽑은 카드가 없어요');
-    click('첫 미션 하러 가기');
-    expect(store.getProgress().screen).toBe('dm');
+    const text = () => host.querySelector('.my-cards')!.textContent!;
+    expect(text()).toContain('카드 팩 1개');
+    expect(text()).toContain('일반 70%');
+    expect(text()).toContain('카드 앨범');
+    click('눌러서 열기');
+    expect(fan.getFan().packs).toBe(0);
+    expect(host.querySelectorAll('.po-revealed')).toHaveLength(0);
+    for (let i = 0; i < 3; i += 1) act(() => { vi.advanceTimersByTime(2000); });
+    expect(host.querySelectorAll('.po-revealed')).toHaveLength(3);
+    expect(text()).toMatch(/NEW/);
+    const owned = Object.values(fan.getFan().cards).reduce((a, b) => a + b, 0);
+    expect(owned).toBe(3);
+    click('닫기');
+    expect(host.querySelector('.po')).toBeNull();
+    expect(host.querySelectorAll('.al-grid button.fc').length).toBeGreaterThan(0);
   });
-  it('뽑은 카드, 팬 배지, 점수를 보여 준다', () => {
+  it('팩도 카드도 없으면 팩 상자 대신 읽기로 가는 안내가 나온다', () => {
     store.completeOnboarding('덕구', 'nietzsche');
+    localStorage.setItem(fan.FAN_KEY, JSON.stringify({ packs: 0 }));
+    act(() => { window.dispatchEvent(new StorageEvent('storage', { key: fan.FAN_KEY })); });
+    show();
+    expect(host.querySelector('.po')).toBeNull();
+    expect(host.textContent).toContain('아직 카드가 없어요');
+    click('읽으러 가기');
+    expect(store.getProgress().screen).toBe('reading');
+  });
+  it('조각이 모자라면 몇 개 더 필요한지 알려 준다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    show();
+    expect(host.textContent).toContain(`조각 ${fan.SHARD_COST.일반}개 더 필요`);
+    expect(host.textContent).toContain('더 가까워지면 받는 장면');
+  });
+  it('옛 문장 카드는 옛 카드 구역에 그대로 보이고, 옛 카드가 없으면 그 구역이 없다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    show();
+    expect(host.querySelector('.al-old')).toBeNull();
+    act(() => { root.unmount(); });
+    root = createRoot(host);
     earnCard();
     show();
-    const text = host.querySelector('.my-cards')!.textContent!;
-    expect(text).toContain('니체 팬');
-    expect(text).toContain(`${store.getProgress().score}점`);
-    expect(text).not.toContain('검수 필요');
-    expect(text).not.toContain('아직 뽑은 카드');
+    const old = host.querySelector('.al-old')!;
+    expect(old.textContent).toContain('문장 카드');
+    expect(old.textContent).not.toContain('검수 필요');
   });
 });
 
@@ -84,16 +118,19 @@ describe('초기화', () => {
     expect(host.querySelector('dialog')).toBeNull();
     expect(store.getProgress().cards).toHaveLength(1);
   });
-  it('확인하면 카드, 점수, 입덕만 지우고 책 기록은 한 글자도 안 바뀐다', () => {
+  it('확인하면 카드, 점수, 입덕, 새 카드 팩 기록만 지우고 책 기록은 한 글자도 안 바뀐다', () => {
     const saved = library('덕구');
     localStorage.setItem(LIBRARY_KEY, saved);
     store.completeOnboarding('덕구', 'nietzsche');
     earnCard();
+    act(() => { fan.openPack(fanCardsOf('nietzsche')); });
+    expect(fan.getFan().packs).toBe(0);
     show();
     click('카드와 입덕 기록 초기화');
     click('카드와 입덕 기록 지우기');
     const p = store.getProgress();
     expect([p.cards.length, p.score, p.nickname, p.favoriteId, p.screen]).toEqual([0, 0, '', null, 'landing']);
+    expect(fan.getFan()).toMatchObject({ cards: {}, shards: 0, packs: 1 });
     expect(localStorage.getItem(LIBRARY_KEY)).toBe(saved);
   });
 });
@@ -133,7 +170,7 @@ describe('홈과 서고 이름이 다를 때', () => {
 describe('키보드 이동', () => {
   const press = (init: KeyboardEventInit) => {
     const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
-    act(() => { document.body.dispatchEvent(event); });
+    act(() => { (host.querySelector('.map') ?? document.body).dispatchEvent(event); });
     return event;
   };
   it('방향키와 WASD로 아바타가 움직인다', () => {

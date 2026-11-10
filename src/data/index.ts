@@ -24,3 +24,9 @@ export const getMissionCount = (id: CharacterId): number =>
 export const getCardsOf = (id: CharacterId): QuoteCard[] =>
   cards.filter((c) => c.characterId === id);
 export const getCard = (id: string): QuoteCard | undefined => cards.find((c) => c.id === id);
+
+// 덕질 개편 자료
+export * from './fanTypes';
+export { books, booksOf, getBook, getPassage } from './books';
+export { episodes, episodesOf, getEpisode } from './episodes';
+export { fanCards, fanCardsOf, getFanCard } from './fancards';

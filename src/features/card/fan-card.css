@@ -1,0 +1,111 @@
+/* 인물 그림 카드. 빌드 때 .fandom-scope 안으로 묶인다. 키프레임 이름은 묶이지 않으므로 fc- 로 시작한다. */
+.fc {
+  --fc-frame: #4b1f78; --fc-bg1: #efe4f7; --fc-bg2: #c9b2e2; --fc-ink: #2a1147;
+  --fc-edge: var(--fc-frame);
+  position: relative; display: block; width: 100%; aspect-ratio: 5 / 7; padding: 0; margin: 0;
+  font: inherit; color: var(--fc-ink); text-align: left; background: none; border: 0; border-radius: 12px;
+  perspective: 900px; container-type: inline-size; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+div.fc { cursor: default; }
+.fc:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.fc-tone-1 { --fc-frame: #24564f; --fc-bg1: #e1f0eb; --fc-bg2: #a9d1c4; --fc-ink: #123631; }
+.fc-tone-2 { --fc-frame: #7a2e3a; --fc-bg1: #f7e5e1; --fc-bg2: #e3b2aa; --fc-ink: #44141c; }
+.fc-tone-3 { --fc-frame: #22355f; --fc-bg1: #e5eaf6; --fc-bg2: #aab8dc; --fc-ink: #121d38; }
+
+.fc-inner { position: absolute; inset: 0; display: block; transform-style: preserve-3d; transition: transform var(--t-slow) var(--ease-move); }
+.fc-flipped .fc-inner { transform: rotateY(180deg); }
+.fc-face {
+  position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+
+/* 앞면: 틀(등급) 안에 색감(tone) 배경 */
+.fc-front {
+  padding: 5cqw; gap: 3cqw;
+  background: radial-gradient(circle at 50% 30%, var(--fc-bg1), var(--fc-bg2));
+  border: max(3px, 3cqw) solid var(--fc-edge);
+  box-shadow: 0 2px 6px rgba(36, 27, 46, .18);
+}
+.fc-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
+.fc-name { font-size: clamp(9px, 7cqw, 14px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-art {
+  position: relative; flex: 1 1 auto; min-height: 0; display: block; overflow: hidden;
+  border-radius: 6px; border: 1px solid color-mix(in srgb, var(--fc-frame) 45%, transparent);
+  background: var(--fc-frame);
+}
+.fc-art .fc-portrait { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fc-art .fc-portrait .monogram, .fc-art .image-placeholder { display: grid; place-items: center; width: 100%; height: 100%; color: var(--fc-bg1); font-family: var(--serif); font-size: 26cqw; }
+.fc-art .fc-portrait img { object-position: 50% 18%; }
+.fc-plate { display: flex; flex-direction: column; gap: 1cqw; min-width: 0; padding: 3cqw 4cqw; background: rgba(255, 253, 247, .82); border-radius: 6px; }
+.fc-title { font-family: var(--serif); font-size: clamp(10px, 8.5cqw, 18px); line-height: 1.25; word-break: keep-all; overflow-wrap: anywhere; }
+.fc-scene { font-size: clamp(8px, 6cqw, 12px); line-height: 1.3; opacity: .8; word-break: keep-all; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fc-count {
+  position: absolute; top: 15cqw; right: 3cqw; padding: 1px 7px; border-radius: 999px;
+  background: var(--ink); color: var(--cream); font-size: clamp(9px, 7cqw, 13px); font-weight: 700;
+}
+
+/* 뒷면 */
+.fc-back {
+  align-items: center; justify-content: center; gap: 5cqw; padding: 10cqw 8cqw; text-align: center;
+  transform: rotateY(180deg); color: var(--on-deep);
+  background: radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--fc-frame) 70%, #fff), var(--fc-frame) 70%);
+  border: max(3px, 3cqw) solid var(--fc-edge);
+}
+.fc-back-mark { font-family: var(--serif); font-size: 22cqw; font-weight: 700; line-height: 1; color: var(--gold-soft); }
+.fc-line { font-family: var(--serif); font-size: clamp(10px, 8cqw, 17px); line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
+.fc-back-note { font-size: clamp(8px, 5.5cqw, 11px); color: var(--on-deep-muted); }
+
+/* 등급 표시: 일반 = 단색, 희귀 = 은빛, 초희귀 = 금빛, 한정 = 무지개 */
+.fc-badge {
+  display: inline-flex; align-items: center; gap: 3px; flex: none; padding: 1px 6px; border-radius: 999px;
+  font-size: clamp(8px, 6.5cqw, 12px); font-weight: 800; line-height: 1.5; white-space: nowrap;
+  background: #fffdf7; color: #4a4257; border: 1px solid #c9bda6;
+}
+.fc-pips { display: inline-flex; gap: 2px; }
+.fc-pips i { width: 5px; height: 5px; background: currentColor; transform: rotate(45deg); }
+.fc-badge-rare { background: linear-gradient(135deg, #f4f7fb, #b9c6d6); color: #2c3e57; border-color: #8ea0b8; }
+.fc-badge-epic { background: linear-gradient(135deg, #fff1c2, #d7a740); color: #4d3200; border-color: #a77a1c; }
+.fc-badge-limited { background: linear-gradient(90deg, #ffd1dc, #ffe7a8, #c9f2d6, #c4dcff, #e3c9ff); color: #3a1b55; border-color: #a77fc4; }
+
+.fc-rare { --fc-edge: #9fb0c6; }
+.fc-rare .fc-front { box-shadow: inset 0 0 0 2px #fff, 0 2px 8px rgba(60, 80, 110, .3); }
+.fc-epic { --fc-edge: #c99a35; }
+.fc-epic .fc-front { box-shadow: inset 0 0 0 2px #fff4d0, 0 0 12px rgba(201, 154, 53, .55); }
+.fc-limited .fc-front, .fc-limited .fc-back {
+  border-color: transparent;
+  background-origin: border-box; background-clip: padding-box, border-box;
+}
+.fc-limited .fc-front {
+  background-image: radial-gradient(circle at 50% 30%, var(--fc-bg1), var(--fc-bg2)), linear-gradient(135deg, #ff9fb6, #ffd36e, #8fe0ad, #7fb4ff, #c99bff, #ff9fb6);
+  box-shadow: 0 0 14px rgba(170, 120, 230, .55);
+}
+.fc-limited .fc-back {
+  background-image: radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--fc-frame) 70%, #fff), var(--fc-frame) 70%), linear-gradient(135deg, #ff9fb6, #ffd36e, #8fe0ad, #7fb4ff, #c99bff, #ff9fb6);
+}
+
+/* 반짝임(초희귀, 한정) */
+.fc-foil {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .85) 45%, rgba(255, 230, 160, .6) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%; animation: fc-shine 3.2s var(--ease-move) infinite;
+}
+.fc-limited .fc-foil {
+  mix-blend-mode: color-dodge; opacity: .55;
+  background: linear-gradient(115deg, transparent 20%, #ff9fb6 35%, #ffe08a 45%, #8fe0ad 55%, #7fb4ff 65%, transparent 80%) no-repeat;
+  background-size: 250% 100%;
+}
+@keyframes fc-shine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
+
+/* 아직 없는 카드: 실루엣 */
+.fc-locked .fc-front { background: #ebe5d8; border-color: #c9bda6; box-shadow: none; }
+.fc-locked.fc-limited .fc-front { background-image: none; border-color: #c4b2d6; border-style: dashed; }
+.fc-locked .fc-art { background: #d8cfbd; border-color: transparent; }
+.fc-locked .fc-art img, .fc-locked .fc-art .image-placeholder { filter: brightness(0); opacity: .28; }
+.fc-locked .fc-name, .fc-locked .fc-plate { color: #6e6576; }
+.fc-locked .fc-plate { background: rgba(255, 253, 247, .6); }
+.fc-locked .fc-badge { opacity: .75; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-inner { transition: none; }
+  .fc-foil { animation: none; background-position: 40% 0; }
+}

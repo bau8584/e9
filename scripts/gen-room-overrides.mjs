@@ -44,6 +44,8 @@ writeFileSync(
     block(lilacText, `color: ${MUTED};`) +
     block(small, 'font-size: 12px !important;') +
     '.collection-card, .side-room-note { background: #fffdf7; }\n.big-count { color: #4b1f78; }\n' +
-    '/* 방 그림 위 이름표. 그림과 겹치지 않는 선에서 키운다. */\n.shelf-label, .shelf-label b, .player-name, .player-name > span, .map-controls span, .map-legend, .map-coordinate { font-size: 10px !important; }\n',
+    '/* 방 그림 위 이름표. 그림과 겹치지 않는 선에서 키운다. */\n.shelf-label, .shelf-label b, .player-name, .player-name > span, .map-controls span, .map-legend, .map-coordinate { font-size: 10px !important; }\n' +
+    '/* 방(지도)에 키보드 초점이 있을 때만 걷는다. 초점 표시. */\n.map:focus-visible { outline: 3px solid #4b1f78; outline-offset: 2px; }\n' +
+    '/* 터치 기기에서는 키보드 안내를 숨긴다. 화면 방향 버튼(.mobile-dpad)은 그대로. */\n@media (hover: none) and (pointer: coarse) {\n  .map-controls > div, .near-hint kbd { display: none; }\n}\n',
 );
 console.log(`글자 ${small.size}, 글자색 ${lilacText.size}, 면 ${lilacFace.size}`);

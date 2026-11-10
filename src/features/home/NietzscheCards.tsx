@@ -1,3 +1,5 @@
+// 옛 니체 포토카드(hipdok.nietzsche.souvenirs.v1). 덕질 개편으로 새로 뽑지 않고, 전에 모은 것만 읽어서 보여 준다.
+// 저장된 값은 읽기만 하고 고치지 않는다. 새 카드는 src/features/card(팩과 앨범)가 맡는다.
 import { useEffect, useState } from 'react';
 import portrait from '../../assets/nietzsche.png';
 import draft from './nietzsche-cards.md?raw';
@@ -9,69 +11,65 @@ const periods = [
   { prefix: 'M', year: 1881, name: '자유롭게 의심하는 니체' },
   { prefix: 'L', year: 1888, name: '차라투스트라를 만난 니체' },
 ];
-const cards = draft.split(/\r?\n/).filter(line => /^\| [ETML]\d{2} \|/.test(line)).map(line => {
+
+export interface Souvenir {
+  id: string;
+  title: string;
+  topic: string;
+  reply: string;
+  year: number;
+  period: string;
+}
+
+const cards: Souvenir[] = draft.split(/\r?\n/).filter(line => /^\| [ETML]\d{2} \|/.test(line)).map(line => {
   const [id, title, topic, reply] = line.split('|').slice(1).map(cell => cell.trim());
-  return { id, title, topic, reply };
+  const period = periods.find(item => item.prefix === id[0])!;
+  return { id, title, topic, reply, year: period.year, period: period.name };
 });
-const storageKey = 'hipdok.nietzsche.souvenirs.v1';
-function readCollection(): string[] {
+
+export const SOUVENIR_KEY = 'hipdok.nietzsche.souvenirs.v1';
+export const SOUVENIR_TOTAL = cards.length;
+export const souvenirPortrait = portrait;
+
+/** 전에 모은 니체 포토카드. 모르는 id는 빼고, 저장값은 고치지 않는다. */
+export function readSouvenirs(): Souvenir[] {
   try {
-    const ids: unknown = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    return Array.isArray(ids) ? [...new Set(ids.filter(id => cards.some(card => card.id === id)))] : [];
+    const ids: unknown = JSON.parse(localStorage.getItem(SOUVENIR_KEY) || '[]');
+    if (!Array.isArray(ids)) return [];
+    return [...new Set(ids)].flatMap(id => cards.filter(card => card.id === id));
   } catch { return []; }
 }
 
-export function NietzscheCards() {
-  const [period, setPeriod] = useState(periods[0]);
-  const [owned, setOwned] = useState(readCollection);
-  const [selected, setSelected] = useState('');
-  const [saveFailed, setSaveFailed] = useState(false);
+/** 다른 탭에서 바뀌어도 따라가는 읽기 전용 값 */
+export function useSouvenirs(): Souvenir[] {
+  const [owned, setOwned] = useState(readSouvenirs);
   useEffect(() => {
     const sync = (event: StorageEvent) => {
-      if (event.key === storageKey || event.key === null) setOwned(readCollection());
+      if (event.key === SOUVENIR_KEY || event.key === null) setOwned(readSouvenirs());
     };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
   }, []);
-  const candidates = cards.filter(card => card.id.startsWith(period.prefix));
-  const available = candidates.filter(card => !owned.includes(card.id));
-  const current = cards.find(card => card.id === selected);
-  const currentPeriod = periods.find(item => item.prefix === selected[0]);
-  function draw() {
-    if (!available.length) return;
-    const card = available[Math.floor(Math.random() * available.length)];
-    const next = [...new Set([...readCollection(), ...owned, card.id])];
-    setOwned(next);
-    setSelected(card.id);
-    try { localStorage.setItem(storageKey, JSON.stringify(next)); setSaveFailed(false); }
-    catch { setSaveFailed(true); }
-  }
+  return owned;
+}
+
+/** 모은 옛 포토카드 목록. 하나도 없으면 아무것도 그리지 않는다. 뽑기는 없앴다(새 카드는 카드 팩으로). */
+export function NietzscheCards() {
+  const owned = useSouvenirs();
+  const [selected, setSelected] = useState('');
+  if (!owned.length) return null;
+  const current = owned.find(card => card.id === selected);
   return <section className="panel nietzsche-album">
-    <h2 className="section-title">니체 포토카드 <small>{owned.length} / {cards.length}</small></h2>
-    <label>만나고 싶은 니체
-      <select value={period.prefix} onChange={event => {
-        setPeriod(periods.find(item => item.prefix === event.target.value)!);
-        setSelected('');
-      }}>
-        {periods.map(item => <option key={item.prefix} value={item.prefix}>{item.year} · {item.name}</option>)}
-      </select>
-    </label>
-    <button type="button" className="btn btn-primary btn-block" disabled={!available.length} onClick={draw}>
-      {available.length ? '이 시기의 포토카드 뽑기' : '이 시기의 10종을 모두 모았어요'}
-    </button>
-    {current && currentPeriod && <article className="nietzsche-feature" key={current.id} data-period={currentPeriod.prefix} aria-live="polite">
+    <h2 className="section-title">옛 니체 포토카드 <small>{owned.length} / {cards.length}</small></h2>
+    {current && <article className="nietzsche-feature" key={current.id} data-period={current.id[0]} aria-live="polite">
       <img src={portrait} alt="" />
-      <div><small>{currentPeriod.year} · {current.id}</small><h3>{current.title}</h3>
+      <div><small>{current.year} · {current.id}</small><h3>{current.title}</h3>
         <p>{current.topic}</p><small>창작 답장</small><p>{current.reply}</p></div>
     </article>}
-    {saveFailed && <p role="status">브라우저에 저장할 수 없어 이번 방문 동안만 보관해요.</p>}
-    {!!owned.length && <><h3>내가 뽑은 니체 카드</h3><ul className="nietzsche-grid">
-      {owned.map(id => {
-        const card = cards.find(item => item.id === id)!;
-        return <li key={id}><button type="button" data-period={id[0]} onClick={() => setSelected(id)} aria-pressed={selected === id}>
-          <img src={portrait} alt="" loading="lazy" /><small>{id}</small><strong>{card.title}</strong>
-        </button></li>;
-      })}
-    </ul></>}
+    <ul className="nietzsche-grid">
+      {owned.map(card => <li key={card.id}><button type="button" data-period={card.id[0]} onClick={() => setSelected(card.id)} aria-pressed={selected === card.id}>
+        <img src={portrait} alt="" loading="lazy" /><small>{card.id}</small><strong>{card.title}</strong>
+      </button></li>)}
+    </ul>
   </section>;
 }

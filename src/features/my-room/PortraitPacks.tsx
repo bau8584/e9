@@ -1,4 +1,5 @@
-// 내 방의 사상가 카드팩. 독서 기록 1권마다 팩을 하나 열 수 있다.
+// 옛 사상가 카드팩. 덕질 개편(2026-11-10)으로 내 방에서 뺐다. 지금은 앨범이 readCards, philosopherCatalog 로 모은 카드만 읽는다.
+// 아래 PortraitPacks 화면은 쓰지 않지만 되돌릴 때를 위해 남겨 둔다. 독서 기록 1권마다 팩을 하나 열 수 있었다.
 // 연 횟수만 기기에 저장한다. 책 기록과 진행 기록의 저장 형식은 건드리지 않는다.
 import { BookOpen } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -9,11 +10,14 @@ const OPENED_KEY = 'hipdok.philosopher.opened.v1';
 const catalog: { name: string; theme: string; image: string }[] = JSON.parse(
   packPage.split('<script id="portrait-data" type="application/json">')[1].split('</script>')[0],
 );
+/** 옛 사상가 카드 목록. 덕질 개편 뒤에는 앨범의 "옛 카드"에서 읽기만 한다. */
+export const philosopherCatalog = catalog;
 
 const validIds = (value: unknown): number[] =>
   Array.isArray(value) ? [...new Set(value.filter((id) => Number.isInteger(id) && catalog[id]))] : [];
 
-function readCards(): number[] {
+/** 전에 모은 사상가 카드 번호(읽기만 한다) */
+export function readCards(): number[] {
   try {
     return validIds(JSON.parse(localStorage.getItem(CARDS_KEY) || '[]'));
   } catch {

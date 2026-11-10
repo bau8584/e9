@@ -1,0 +1,71 @@
+/* 카드 팩 열기. 빌드 때 .fandom-scope 안으로 묶인다. 키프레임 이름은 po- 로 시작한다. */
+.po { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+.po-head { display: flex; flex-direction: column; gap: 2px; }
+.po-title { margin: 0; font-family: var(--serif); font-size: 1.15rem; line-height: 1.4; }
+.po-title strong { color: var(--purple); }
+.po-hint { margin: 0; color: var(--muted); font-size: .88rem; word-break: keep-all; }
+
+/* 봉투 */
+.po-pack {
+  --po-a: #4b1f78; --po-b: #7d4cb0;
+  position: relative; align-self: center; width: min(100%, 210px); aspect-ratio: 3 / 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  padding: 0 14px 18px; overflow: hidden; font: inherit; color: var(--on-deep); cursor: pointer;
+  background: linear-gradient(160deg, var(--po-b), var(--po-a) 65%); border: 2px solid var(--gold); border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(42, 17, 71, .3); animation: po-float 3s ease-in-out infinite;
+}
+.po-tone-xunzi { --po-a: #23453f; --po-b: #3f7a6c; }
+.po-tone-austen { --po-a: #7a2e3a; --po-b: #b35a68; }
+.po-tone-siddhartha { --po-a: #6b4a14; --po-b: #a77d34; }
+.po-pack:hover { box-shadow: 0 10px 24px rgba(42, 17, 71, .4); }
+.po-pack:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+.po-flap { position: absolute; top: 0; left: 0; right: 0; height: 42%; background: linear-gradient(170deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .05)); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.po-seal {
+  position: absolute; top: 30%; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; translate: -50% 0;
+  background: radial-gradient(circle at 35% 35%, #f3d68d, var(--gold)); border-radius: 50%; color: #3b2400;
+  font-family: var(--serif); font-size: 1.5rem; font-weight: 700; box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+}
+.po-pack-label { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.po-pack-label small { font-size: .66rem; letter-spacing: .14em; color: var(--gold-soft); }
+.po-pack-label strong { font-family: var(--serif); font-size: 1.25rem; }
+.po-pack-label span { margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: rgba(255, 253, 247, .18); font-size: .82rem; font-weight: 700; }
+.po-glint { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .35) 48%, transparent 60%); background-size: 250% 100%; animation: po-glint 3.6s ease-in-out infinite; pointer-events: none; }
+
+/* 공개 */
+.po-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.po-slot { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.po-back, .po-card { width: 100%; aspect-ratio: 5 / 7; }
+.po-back {
+  display: grid; place-items: center; padding: 0; font: inherit; cursor: pointer;
+  background: repeating-linear-gradient(45deg, var(--deep) 0 8px, #34175a 8px 16px); color: var(--gold-soft);
+  border: 2px solid var(--gold); border-radius: 12px; font-family: var(--serif); font-size: 1.6rem; font-weight: 700;
+}
+.po-back:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.po-waiting .po-back { animation: po-shake 520ms ease-in-out infinite; }
+.po-waiting.po-rare .po-back { box-shadow: 0 0 14px #b9c6d6; }
+.po-waiting.po-epic .po-back { box-shadow: 0 0 22px #e3b54c; animation-duration: 300ms; }
+.po-revealed .po-card { animation: po-reveal var(--t-peak) var(--ease-over) both; }
+.po-revealed.po-rare .po-card { filter: drop-shadow(0 0 8px rgba(160, 180, 210, .9)); }
+.po-revealed.po-epic .po-card { filter: drop-shadow(0 0 14px rgba(232, 182, 72, .95)); }
+.po-revealed.po-epic::before {
+  content: ''; position: absolute; inset: -12% -8%; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, rgba(241, 210, 120, .75), transparent 65%); animation: po-burst 1.2s ease-out both;
+}
+.po-tag { padding: 1px 9px; border-radius: 999px; font-size: .75rem; font-weight: 800; white-space: nowrap; }
+.po-tag-new { background: var(--danger); color: #fff; animation: po-pop var(--t-slow) var(--ease-over) both; }
+.po-tag-dup { background: var(--highlight); color: var(--deep); }
+.po-result { margin: 0; text-align: center; font-weight: 700; color: var(--deep); word-break: keep-all; }
+.po-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.po-actions .btn { flex: 1 1 140px; }
+.po-close { background: var(--cream); color: var(--ink); border: 1px solid var(--line-strong); }
+.po-rates { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.5; word-break: keep-all; }
+
+@keyframes po-float { 0%, 100% { transform: translateY(2px) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(-1deg); } }
+@keyframes po-glint { 0%, 30% { background-position: 150% 0; } 80%, 100% { background-position: -100% 0; } }
+@keyframes po-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2.5deg) scale(1.02); } 75% { transform: rotate(2.5deg) scale(1.02); } }
+@keyframes po-reveal { 0% { transform: rotateY(90deg) scale(.9); opacity: .2; } 100% { transform: none; opacity: 1; } }
+@keyframes po-burst { 0% { transform: scale(.4); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+@keyframes po-pop { from { transform: scale(.4); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .po-pack, .po-glint, .po-waiting .po-back, .po-revealed .po-card, .po-revealed.po-epic::before, .po-tag-new { animation: none !important; }
+}

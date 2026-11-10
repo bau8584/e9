@@ -2,6 +2,8 @@
 import { getCard, getCharacter, type Character, type QuoteCard } from '../../data';
 import { cleanNickname, isSeasonComplete, NICKNAME_MAX, type Screen, type Stage } from '../../store/progress';
 import { getProgress, goTo, renameNickname, resetProgress, useSnapshot } from '../../store/store';
+import { fanCards } from '../../data/fancards';
+import { getFan, resetFan, useFan, type FanState } from '../../store/fan';
 
 export { cleanNickname, NICKNAME_MAX, renameNickname };
 
@@ -20,8 +22,16 @@ export const getCards = (): QuoteCard[] =>
 
 export const getScore = (): number => getProgress().score;
 
-/** 입덕 진행 기록을 지우고 첫 화면으로 돌아간다. 서고는 남는다. 실패하면 false. 버튼에 "정말 지울까요?" 확인을 붙일 것. */
-export const resetAll = (): boolean => resetProgress();
+/** 입덕 진행 기록과 새 카드(팩, 조각, 호감)를 지우고 첫 화면으로 돌아간다. 서고는 남는다. 실패하면 false. 버튼에 "정말 지울까요?" 확인을 붙일 것. */
+export function resetAll(): boolean {
+  const ok = resetProgress();
+  if (ok) resetFan();
+  return ok;
+}
+
+/** 새 인물 카드 중 가진 종류 수(같은 카드 여러 장은 1로 센다) */
+export const fanCardCount = (fan: FanState = getFan()): number =>
+  fanCards.filter((card) => (fan.cards[card.id] ?? 0) > 0).length;
 
 export interface CardGroup {
   character: Character;
@@ -64,7 +74,12 @@ export const namesDiffer = (homeName: string, libraryName: string): boolean =>
 /** 화면 안에서 쓰는 묶음. 값이 바뀌면 화면이 저절로 다시 그려진다. */
 export function useMyRoomData() {
   useSnapshot();
+  const fan = useFan();
   return {
+    fanCards: fanCardCount(fan),
+    fanTotal: fanCards.length,
+    packs: fan.packs,
+    shards: fan.shards,
     nickname: getNickname(),
     favorite: getFavorite(),
     cards: getCards(),

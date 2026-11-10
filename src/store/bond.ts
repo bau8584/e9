@@ -1,42 +1,19 @@
-// 호감도. 독서 활동 수로 계산하므로 진행 기록과 서버 규칙을 건드리지 않는다.
-// 저장하는 것은 "단계 상승 장면을 본 단계"뿐이다. 기기를 옮기면 장면이 한 번 더 나올 수 있다.
+// 호감도. 인물과 보낸 시간과 선택(대목 읽기, 선택 대화, 자유대화)으로 쌓인 호감 점수에서 단계를 정한다.
+// 점수는 fan.ts 가 쌓는다. 여기에 저장하는 것은 "단계 상승 장면을 본 단계"뿐이다. 기기를 옮기면 장면이 한 번 더 나올 수 있다.
+// 옛 방식(독서 기록 수)으로 이미 오른 사용자는 본 단계 아래로 내려가지 않는다.
 import type { CharacterId } from '../data';
 import { loadLibrary } from '../library.mjs';
-import { favoriteCardCount } from './progress';
+import { AFFINITY_THRESHOLDS, affinityOf, stageOfAffinity, useFan } from './fan';
 import { useSnapshot } from './store';
 
 export const BOND_SEEN_KEY = 'hipdok:bond:v1';
 
-/** 각 단계에 오르는 데 필요한 독서 활동 수. 앞으로 조정할 때 여기만 고친다. */
-export const BOND_THRESHOLDS = [0, 3, 6, 10];
-/** 낙서로 호감을 쌓지 않도록 둔 최소 글자 수 */
-export const QUOTE_MIN_CHARS = 5;
-export const MEMO_MIN_CHARS = 10;
-
 export interface BookActivity {
   title?: string;
-  quote?: string;
-  memo?: string;
   createdAt?: string;
 }
 
-/** 독서 활동 수: 미션 완료 1개당 1, 책 등록 1, 문장 기록 1, 감상 기록 1 */
-export function activityPoints(cardCount: number, books: BookActivity[]): number {
-  return books.reduce(
-    (sum, book) =>
-      sum +
-      1 +
-      ((book.quote ?? '').trim().length >= QUOTE_MIN_CHARS ? 1 : 0) +
-      ((book.memo ?? '').trim().length >= MEMO_MIN_CHARS ? 1 : 0),
-    cardCount,
-  );
-}
-
-export function stageOfPoints(points: number): number {
-  return BOND_THRESHOLDS.reduce((stage, need, index) => (points >= need ? index : stage), 0);
-}
-
-/** 가장 최근에 등록한 책의 제목. 없으면 null */
+/** 가장 최근에 등록한 책의 제목. 없으면 null. 인물이 내 책에 반응하는 대사에만 쓴다. */
 export function latestBookTitle(books: BookActivity[]): string | null {
   const latest = books.reduce<BookActivity | null>(
     (best, book) => (!best || (book.createdAt ?? '') > (best.createdAt ?? '') ? book : best),
@@ -77,20 +54,45 @@ export function markStageSeen(id: CharacterId, stage: number) {
 }
 
 export interface BondStatus {
-  /** 활동 수만으로 계산한 단계 */
+  /** 호감 점수만으로 계산한 단계 */
   earned: number;
-  /** 화면에 쓰는 단계. 책을 지워도 이미 본 단계 아래로 내려가지 않는다. */
+  /** 화면에 쓰는 단계. 이미 본 단계 아래로 내려가지 않는다. */
   stage: number;
+  /** 지금 최애의 호감 점수 */
   points: number;
   latestBook: string | null;
 }
 
-/** 화면을 그릴 때마다 서고를 다시 읽어 계산한다. */
+/** 점수와 본 단계로 화면에 쓸 단계를 정한다. */
+export function bondOf(points: number, seen: number): Pick<BondStatus, 'earned' | 'stage' | 'points'> {
+  const earned = stageOfAffinity(points);
+  return { earned, stage: Math.max(earned, seen), points };
+}
+
+export interface NextBond {
+  /** 다음 단계에 오르는 데 필요한 점수 */
+  need: number;
+  /** 남은 점수(최소 1) */
+  remaining: number;
+  /** 지금 단계에서 다음 단계까지 온 비율 0~1 */
+  ratio: number;
+}
+
+/** 다음 단계까지의 거리. 가장 가까운 단계면 null. */
+export function nextBondOf(stage: number, points: number): NextBond | null {
+  const need = AFFINITY_THRESHOLDS[stage + 1];
+  if (need === undefined) return null;
+  const from = AFFINITY_THRESHOLDS[Math.min(stage, stageOfAffinity(points))];
+  const ratio = Math.min(1, Math.max(0, (points - from) / (need - from)));
+  return { need, remaining: Math.max(need - points, 1), ratio };
+}
+
+/** 점수가 바뀌면 화면도 바뀐다. */
 export function useBond(): BondStatus {
   const { progress } = useSnapshot();
-  const books = readBooks();
-  const points = activityPoints(favoriteCardCount(progress), books);
-  const earned = stageOfPoints(points);
-  const seen = progress.favoriteId ? readSeenStage(progress.favoriteId) : 0;
-  return { earned, stage: Math.max(earned, seen), points, latestBook: latestBookTitle(books) };
+  const fan = useFan();
+  const id = progress.favoriteId;
+  const points = id ? affinityOf(id, fan) : 0;
+  const seen = id ? readSeenStage(id) : 0;
+  return { ...bondOf(points, seen), latestBook: latestBookTitle(readBooks()) };
 }

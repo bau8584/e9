@@ -251,3 +251,9 @@ small { font-size: 12px !important; }
 .big-count { color: #4b1f78; }
 /* 방 그림 위 이름표. 그림과 겹치지 않는 선에서 키운다. */
 .shelf-label, .shelf-label b, .player-name, .player-name > span, .map-controls span, .map-legend, .map-coordinate { font-size: 10px !important; }
+/* 방(지도)에 키보드 초점이 있을 때만 걷는다. 초점 표시. */
+.map:focus-visible { outline: 3px solid #4b1f78; outline-offset: 2px; }
+/* 터치 기기에서는 키보드 안내를 숨긴다. 화면 방향 버튼(.mobile-dpad)은 그대로. */
+@media (hover: none) and (pointer: coarse) {
+  .map-controls > div, .near-hint kbd { display: none; }
+}

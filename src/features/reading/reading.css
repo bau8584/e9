@@ -1,16 +1,106 @@
-.reading-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 700; color: var(--purple); }
-.gate-text { color: var(--muted); word-break: keep-all; }
-.passage { margin: 24px 0 32px; padding: 0 2px; }
-.passage-tags { margin: 0 0 10px; }
-.passage-original { margin: 0 0 18px; font-family: var(--serif); font-size: 1.4rem; line-height: 1.7; overflow-wrap: anywhere; }
-.passage-translation { margin: 0; font-size: 1.05rem; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
-.passage-source { margin: 14px 0 0; font-size: .78rem; color: var(--muted); word-break: keep-all; }
-.quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-.btn-option { text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--line-strong); font-weight: 500; word-break: keep-all; }
-.btn-option:disabled { opacity: .6; cursor: default; }
-.btn-option.is-wrong { opacity: 1; border-color: var(--danger); color: var(--danger); }
-.hint { margin-top: 14px; padding: 14px; background: var(--danger-soft); border-radius: var(--r-control); }
-.hint-title { margin: 0 0 8px; font-weight: 700; }
-.hint-passage { display: inline; padding: 2px 3px; background: var(--highlight); color: var(--ink); line-height: 1.7; word-break: keep-all; }
-.hint-note { margin: 8px 0 12px; font-size: .9rem; color: var(--muted); word-break: keep-all; }
-.correct-note { margin: 0 0 8px; font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--purple); }
+/* 읽기 탭 = 최애의 서재와 읽는 화면. 이 파일의 이름은 모두 rd- 로 시작한다. */
+.rd-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 700; color: var(--purple); word-break: keep-all; }
+.rd-who { display: block; margin-bottom: 2px; font-family: var(--sans); font-size: .75rem; font-weight: 700; color: var(--purple); }
+.rd-mini-portrait { width: 36px; height: 36px; flex: none; border-radius: 50%; overflow: hidden; object-fit: cover; }
+
+/* ---------- 서재 ---------- */
+.rd-library-head { margin: 14px 0 18px; }
+.rd-empty { display: flex; gap: 12px; align-items: center; color: var(--muted); word-break: keep-all; }
+.rd-empty p { margin: 0; line-height: 1.6; }
+.rd-empty-portrait { width: 56px; height: 56px; flex: none; border-radius: 50%; overflow: hidden; }
+
+.rd-book { margin: 0 0 28px; }
+.rd-cover {
+  position: relative; padding: 22px 18px 18px 26px; color: var(--on-deep);
+  background: linear-gradient(160deg, var(--purple), var(--deep));
+  border-radius: 4px var(--r-card) var(--r-card) 4px;
+  box-shadow: inset 8px 0 0 rgba(0, 0, 0, .18), 0 2px 0 var(--line-strong);
+}
+.rd-cover::after { content: ''; position: absolute; inset: 8px 10px 8px 18px; border: 1px solid rgba(231, 204, 143, .35); border-radius: 2px; pointer-events: none; }
+.rd-cover-title { margin: 0; font-family: var(--serif); font-size: 1.35rem; line-height: 1.35; word-break: keep-all; }
+.rd-cover-original { margin: 4px 0 14px; font-size: .8rem; color: var(--gold-soft); overflow-wrap: anywhere; }
+.rd-intro { position: relative; z-index: 1; display: flex; gap: 8px; align-items: flex-start; }
+.rd-intro-text { margin: 0; padding: 9px 12px; color: var(--ink); background: var(--surface); border-radius: 12px; border-top-left-radius: 4px; line-height: 1.55; font-size: .92rem; word-break: keep-all; overflow-wrap: anywhere; }
+
+.rd-shelf-note { margin: 12px 2px 6px; font-size: .85rem; color: var(--muted); word-break: keep-all; }
+.rd-passages { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.rd-passage-row {
+  display: flex; flex-direction: column; gap: 4px; width: 100%; min-height: 48px; padding: 12px 14px;
+  font: inherit; text-align: left; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: var(--r-control); cursor: pointer;
+}
+.rd-passage-row.is-read { border-left-color: var(--line-strong); }
+.rd-passage-row:hover { border-color: var(--line-strong); }
+.rd-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rd-row-title { font-family: var(--serif); font-weight: 700; word-break: keep-all; }
+.rd-row-meta { flex: none; font-size: .75rem; color: var(--muted); }
+.rd-passage-row:not(.is-read) .rd-row-meta { color: var(--gold); font-weight: 700; }
+.rd-row-hook { font-size: .88rem; color: var(--muted); line-height: 1.5; word-break: keep-all; }
+
+/* ---------- 읽는 화면 ---------- */
+.rd-position { position: fixed; top: 0; left: 0; right: 0; z-index: 20; height: 3px; background: transparent; pointer-events: none; }
+.rd-position-bar { height: 100%; background: var(--gold); transform: scaleX(0); transform-origin: left; }
+.rd-back {
+  min-height: 44px; padding: 8px 2px; font: inherit; font-size: .9rem; font-weight: 700;
+  color: var(--purple); background: none; border: 0; cursor: pointer;
+}
+.rd-back::before { content: '\2039'; margin-right: 6px; font-size: 1.2rem; line-height: 1; }
+.rd-reader-head { margin: 4px 0 22px; }
+.rd-source { margin: 4px 0 0; font-size: .78rem; color: var(--muted); word-break: keep-all; }
+
+.rd-body { max-width: 34em; margin: 0 auto; }
+.rd-text {
+  margin: 0 0 1.3em; font-family: var(--serif); font-size: 1.06rem; line-height: 2;
+  color: var(--ink); word-break: keep-all; overflow-wrap: anywhere;
+  /* 잠언 묶음처럼 한 덩이 안의 줄바꿈을 살린다 */
+  white-space: pre-line;
+}
+.rd-aside { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0 1.6em; padding-left: 4px; }
+.rd-aside-bubble {
+  margin: 0; padding: 9px 13px; max-width: 86%; font-family: var(--sans); font-size: .9rem; line-height: 1.55;
+  color: var(--ink); background: var(--highlight); border-radius: 14px; border-top-left-radius: 4px;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+
+/* ---------- 끝의 질문과 반응 ---------- */
+.rd-ending { margin: 32px 0 0; padding-top: 22px; border-top: 1px dashed var(--line-strong); }
+.rd-thread, .rd-reaction { display: flex; flex-direction: column; gap: 8px; }
+.rd-them { display: flex; gap: 8px; align-items: flex-end; }
+.rd-portrait-gap { width: 36px; flex: none; }
+.rd-bubble { margin: 0; padding: 10px 14px; max-width: 82%; line-height: 1.55; word-break: keep-all; overflow-wrap: anywhere; border-radius: 14px; }
+.rd-bubble-them { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.rd-bubble-me { align-self: flex-end; background: var(--purple); color: var(--on-deep); border-bottom-right-radius: 4px; }
+.rd-typing { display: flex; gap: 4px; align-items: center; height: 42px; }
+.rd-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: rd-dot 1s ease-in-out infinite; }
+.rd-typing span:nth-child(2) { animation-delay: .15s; }
+.rd-typing span:nth-child(3) { animation-delay: .3s; }
+.rd-in { animation: rd-in .2s ease-out both; }
+.rd-skip-hint { margin: 2px 0 0; font-size: .75rem; color: var(--muted); text-align: center; }
+
+.rd-options { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.rd-option {
+  min-height: 48px; padding: 11px 14px; font: inherit; text-align: left; color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--r-control);
+  cursor: pointer; word-break: keep-all; overflow-wrap: anywhere;
+}
+.rd-option:hover { border-color: var(--purple); }
+.rd-option.is-before { border-color: var(--purple); }
+.rd-option-note { display: block; margin-top: 3px; font-size: .72rem; font-weight: 700; color: var(--purple); }
+.rd-link { align-self: center; min-height: 44px; padding: 8px 12px; font: inherit; font-size: .88rem; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.rd-repick { display: block; margin: 6px auto 0; }
+
+.rd-reward { margin: 16px 0 12px; padding: 14px 16px; background: var(--highlight); border-radius: var(--r-card); }
+.rd-reward-head { margin: 0 0 6px; font-family: var(--serif); font-weight: 700; color: var(--deep); word-break: keep-all; }
+.rd-reward-list { margin: 0; padding-left: 1.1em; font-size: .9rem; line-height: 1.7; word-break: keep-all; }
+
+.rd-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.rd-btn-quiet { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line-strong); font-weight: 600; word-break: keep-all; }
+.rd-book-foot { margin-top: 20px; }
+.rd-translation-note { margin: 10px 0 0; font-size: .75rem; line-height: 1.5; color: var(--muted); word-break: keep-all; overflow-wrap: anywhere; }
+
+@keyframes rd-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes rd-dot { 0%, 100% { opacity: .35; transform: none; } 40% { opacity: 1; transform: translateY(-3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-in, .rd-typing span { animation: none; }
+}

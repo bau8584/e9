@@ -1,6 +1,7 @@
 import { Portrait } from '../../components/Portrait';
 import { AdaptedLabel } from '../../components/Labels';
 import { characters, PLAYABLE_IDS, upcomingAuthors } from '../../data';
+import { openDiscovery } from '../discovery/DiscoveryDialog';
 import { startOnboarding } from '../../store/store';
 import './landing.css';
 
@@ -26,10 +27,15 @@ export function LandingPage() {
           </li>
         ))}
       </ul>
-      <section className="upcoming" aria-labelledby="upcoming-title">
-        <h2 id="upcoming-title" className="upcoming-title">
+      <p className="landing-taste" style={{ textAlign: 'center', margin: '12px 0' }}>
+        <button type="button" className="btn" onClick={openDiscovery}>
+          누굴 고를지 모르겠다면, 12개 질문으로 찾아보기
+        </button>
+      </p>
+      <details className="upcoming" aria-labelledby="upcoming-title">
+        <summary id="upcoming-title" className="upcoming-title" style={{ cursor: 'pointer' }}>
           준비 중인 작가들
-        </h2>
+        </summary>
         {upcomingAuthors.map((group) => (
           <div key={group.region} className="upcoming-group">
             <h3 className="upcoming-region">{group.region}</h3>
@@ -45,7 +51,7 @@ export function LandingPage() {
             </ul>
           </div>
         ))}
-      </section>
+      </details>
       <p className="landing-note">
         <AdaptedLabel /> 인물의 말투는 제작진이 지어낸 것이에요. 로그인 없이 시작해요.
       </p>

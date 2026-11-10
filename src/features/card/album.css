@@ -1,0 +1,46 @@
+/* 카드 앨범. 빌드 때 .fandom-scope 안으로 묶인다. 내 방(.my-room-scope) 안에서도 쓰이므로 글자 크기와 여백을 직접 정한다. */
+.al { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+.al-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; }
+.al-title { margin: 0; font-family: var(--serif); font-size: 1.25rem; line-height: 1.4; }
+.al-shards { margin: 0; padding: 3px 12px; background: var(--highlight); border-radius: 999px; color: var(--deep); font-size: .9rem; }
+.al-note { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.5; word-break: keep-all; }
+.al-status { margin: 0; min-height: 0; color: var(--purple); font-size: .9rem; font-weight: 700; }
+.al-status:empty { display: none; }
+
+.al-person { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.al-person-title { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--serif); font-size: 1.05rem; line-height: 1.4; }
+.al-fav { padding: 1px 8px; border-radius: 4px; background: var(--purple); color: var(--on-deep); font-family: var(--sans); font-size: .72rem; }
+.al-count { margin-left: auto; color: var(--purple); font-family: var(--sans); font-size: .9rem; font-weight: 700; }
+.al-bar { height: 6px; overflow: hidden; background: var(--line); border-radius: 999px; }
+.al-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--purple), var(--gold)); border-radius: inherit; transition: width var(--t-slow) var(--ease-out); }
+
+.al-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 560px) { .al-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px 12px; } }
+.al-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.al-cell .share-card { margin: 0; gap: 2px; }
+.al-cell .share-card-btn { min-height: 44px; padding: 6px 4px; font-size: .76rem; background: var(--deep); color: var(--on-deep); }
+.al-cell .share-card-note { font-size: .72rem; min-height: 0; text-align: center; }
+.al-cell-note { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.4; text-align: center; word-break: keep-all; }
+.al-exchange {
+  min-height: 44px; padding: 6px 4px; font: inherit; font-size: .76rem; font-weight: 700; line-height: 1.3; word-break: keep-all;
+  background: var(--cream); color: var(--muted); border: 1px dashed var(--line-strong); border-radius: var(--r-control); cursor: not-allowed;
+}
+.al-exchange-ready { background: var(--gold); color: #2b1a00; border: 1px solid var(--gold); cursor: pointer; }
+.al-exchange-ready:hover { background: var(--gold-soft); }
+
+/* 옛 카드(읽기만) */
+.al-old { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.al-old summary { min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; }
+.al-old summary span { color: var(--muted); font-weight: 400; font-size: .88rem; }
+.al-old-title { margin: 14px 0 8px; font-size: .95rem; }
+.al-old-title small { margin-left: 6px; color: var(--muted); font-size: .8rem; font-weight: 400; }
+.al-old-quotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.al-old-quotes .quote-card { width: 100%; }
+.al-old-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.al-old-tiles li { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px; background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-control); }
+.al-old-tiles img { width: 40px; height: 52px; flex: none; object-fit: cover; object-position: 50% 15%; border-radius: 4px; background: var(--purple); }
+.al-old-tiles div { display: flex; flex-direction: column; min-width: 0; }
+.al-old-tiles small { color: var(--muted); font-size: .7rem; }
+.al-old-tiles strong { font-size: .84rem; line-height: 1.3; word-break: keep-all; overflow-wrap: anywhere; }
+
+@media (prefers-reduced-motion: reduce) { .al-bar i { transition: none; } }

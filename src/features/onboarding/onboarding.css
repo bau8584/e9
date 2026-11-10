@@ -32,7 +32,11 @@
 }
 .badge-kicker { animation: hd-badge-rise var(--t-slow) var(--ease-out) backwards; }
 .badge-note, .badge-page > .btn { animation: hd-badge-rise var(--t-slow) var(--ease-out) 1050ms backwards; }
-.badge-page > .btn { animation-delay: 1180ms; }
+.badge-page > .btn { animation: none; }
+.favorite-picked { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--r-control); }
+.favorite-picked-portrait { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex: none; }
+.favorite-picked-name { flex: 1; min-width: 0; font-family: var(--serif); font-weight: 700; overflow-wrap: anywhere; }
+.favorite-change { min-height: 44px; padding: 0 14px; font: inherit; color: var(--purple); background: transparent; border: 1.5px solid var(--line-strong); border-radius: var(--r-control); cursor: pointer; }
 @keyframes hd-stamp { from { opacity: 0; transform: scale(1.18) rotate(-4deg); } }
 @keyframes hd-badge-shine {
   from { opacity: 1; transform: translateX(-120%) skewX(-12deg); }
