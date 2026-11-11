@@ -29,6 +29,9 @@ export function resetAll(): boolean {
   return ok;
 }
 
+/** 지금 최애의 카드(최애가 없으면 전부). 앨범과 같은 기준으로 센다. */
+const mine = () => fanCards.filter((card) => !getProgress().favoriteId || card.characterId === getProgress().favoriteId);
+
 /** 새 인물 카드 중 가진 종류 수(같은 카드 여러 장은 1로 센다) */
 export const fanCardCount = (fan: FanState = getFan()): number =>
   fanCards.filter((card) => (fan.cards[card.id] ?? 0) > 0).length;
@@ -76,8 +79,8 @@ export function useMyRoomData() {
   useSnapshot();
   const fan = useFan();
   return {
-    fanCards: fanCardCount(fan),
-    fanTotal: fanCards.length,
+    fanCards: mine().filter((card) => (fan.cards[card.id] ?? 0) > 0).length,
+    fanTotal: mine().length,
     packs: fan.packs,
     shards: fan.shards,
     nickname: getNickname(),

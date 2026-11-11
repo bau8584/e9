@@ -1,4 +1,4 @@
-// 카드 앨범. 입덕할 수 있는 인물마다 가진 카드와 아직 없는 카드(잠긴 모습)를 모아 보여 준다.
+// 카드 앨범. 지금 최애의 카드만 세고 보여 준다(가진 카드와 아직 없는 카드). 다른 인물 카드는 가진 것만 접힌 구역에.
 // 조각으로 없는 카드를 바꾸고, 맨 아래에는 전에 모은 옛 카드(문장 카드, 니체 포토카드, 사상가 카드)를 읽기만 해서 보여 준다.
 import { useState } from 'react';
 import { QuoteCardView } from '../../components/QuoteCardView';
@@ -112,11 +112,45 @@ function OldCards() {
   );
 }
 
+/** 한 인물의 카드 묶음. 최애는 전부(잠긴 카드와 교환 포함), 다른 인물은 가진 카드만. */
+function PersonCards({ id, ownedOnly, favorite = false, onExchanged }: { id: CharacterId; ownedOnly: boolean; favorite?: boolean; onExchanged: (card: FanCard) => void }) {
+  const fan = useFan();
+  const character = getCharacter(id);
+  const all = albumCardsOf(id);
+  const owned = all.filter((card) => (fan.cards[card.id] ?? 0) > 0).length;
+  const list = ownedOnly ? all.filter((card) => (fan.cards[card.id] ?? 0) > 0) : all;
+  return (
+    <section className="al-person" aria-label={`${character.name} 카드`}>
+      <h3 className="al-person-title">
+        {character.name}
+        {favorite && <small className="al-fav">최애</small>}
+        <span className="al-count">{owned} / {all.length}</span>
+      </h3>
+      {!ownedOnly && <div className="al-bar" aria-hidden="true"><i style={{ width: all.length ? `${(owned / all.length) * 100}%` : 0 }} /></div>}
+      {list.length ? (
+        <ul className="al-grid">
+          {list.map((card) => (
+            <Cell key={card.id} card={card} count={fan.cards[card.id] ?? 0} shards={fan.shards} onExchanged={onExchanged} />
+          ))}
+        </ul>
+      ) : (
+        <p className="al-note">카드를 준비하고 있어요.</p>
+      )}
+    </section>
+  );
+}
+
 export function Album() {
   const fan = useFan();
   const { progress } = useSnapshot();
   const [status, setStatus] = useState('');
-  const order = albumOrder(progress.favoriteId);
+  const favoriteId = progress.favoriteId && PLAYABLE_IDS.includes(progress.favoriteId) ? progress.favoriteId : null;
+  const onExchanged = (c: FanCard) => setStatus(`조각으로 "${c.title}" 카드를 받았어요.`);
+  // 최애가 없으면 예전처럼 모든 인물을 펼친다. 최애가 있으면 최애만 세고, 다른 인물은 가진 카드가 있을 때만 접어 둔다.
+  const others = favoriteId
+    ? PLAYABLE_IDS.filter((id) => id !== favoriteId && fanCardsOf(id).some((card) => (fan.cards[card.id] ?? 0) > 0))
+    : [];
+  const otherCount = others.reduce((sum, id) => sum + fanCardsOf(id).filter((card) => (fan.cards[card.id] ?? 0) > 0).length, 0);
   return (
     <div className="fandom-scope">
       <section className="al" aria-labelledby="album-title">
@@ -126,39 +160,21 @@ export function Album() {
         </div>
         <p className="al-note">
           겹친 카드는 조각이 돼요(일반 {SHARDS_FROM_DUPLICATE.일반}, 희귀 {SHARDS_FROM_DUPLICATE.희귀}, 초희귀 {SHARDS_FROM_DUPLICATE.초희귀}).
-          조각을 모아 아직 없는 카드로 바꿀 수 있어요.
+          조각 일반 {SHARD_COST.일반}, 희귀 {SHARD_COST.희귀}, 초희귀 {SHARD_COST.초희귀}개로 아직 없는 카드를 받을 수 있어요.
         </p>
         <p className="al-status" role="status" aria-live="polite">{status}</p>
-        {order.map((id) => {
-          const character = getCharacter(id);
-          const list = albumCardsOf(id);
-          const owned = list.filter((card) => (fan.cards[card.id] ?? 0) > 0).length;
-          return (
-            <section className="al-person" key={id} aria-label={`${character.name} 카드`}>
-              <h3 className="al-person-title">
-                {character.name}
-                {id === progress.favoriteId && <small className="al-fav">최애</small>}
-                <span className="al-count">{owned} / {list.length}</span>
-              </h3>
-              <div className="al-bar" aria-hidden="true"><i style={{ width: list.length ? `${(owned / list.length) * 100}%` : 0 }} /></div>
-              {list.length ? (
-                <ul className="al-grid">
-                  {list.map((card) => (
-                    <Cell
-                      key={card.id}
-                      card={card}
-                      count={fan.cards[card.id] ?? 0}
-                      shards={fan.shards}
-                      onExchanged={(c) => setStatus(`조각으로 "${c.title}" 카드를 받았어요.`)}
-                    />
-                  ))}
-                </ul>
-              ) : (
-                <p className="al-note">카드를 준비하고 있어요.</p>
-              )}
-            </section>
-          );
-        })}
+        {favoriteId ? (
+          <PersonCards id={favoriteId} ownedOnly={false} favorite onExchanged={onExchanged} />
+        ) : (
+          albumOrder(null).map((id) => <PersonCards key={id} id={id} ownedOnly={false} onExchanged={onExchanged} />)
+        )}
+        {others.length > 0 && (
+          <details className="al-old al-others">
+            <summary>다른 인물 카드 <span>{otherCount}장</span></summary>
+            <p className="al-note">전에 다른 인물을 좋아할 때 모은 카드예요. 그대로 간직해 둘게요.</p>
+            {others.map((id) => <PersonCards key={id} id={id} ownedOnly onExchanged={onExchanged} />)}
+          </details>
+        )}
         <OldCards />
       </section>
     </div>

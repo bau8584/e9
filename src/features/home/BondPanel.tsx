@@ -1,12 +1,15 @@
 import type { BondStage } from '../../data/bonds';
 import { nextBondOf, type BondStatus } from '../../store/bond';
 import { goTo } from '../../store/store';
+import { josa } from '../dm/dmCopy';
 import './bond.css';
 
 interface Props {
   stages: BondStage[];
   status: BondStatus;
   fill: (text: string) => string;
+  /** 인물 이름(조사 붙이기용) */
+  name: string;
 }
 
 const HOW: { title: string; text: string; label: string; screen: 'reading' | 'dm' }[] = [
@@ -24,12 +27,14 @@ function feelOf(ratio: number): string {
 }
 
 /** 나와 최애의 관계가 지금 어느 정도이고, 무엇을 하면 가까워지는지 보여 준다. */
-export function BondPanel({ stages, status, fill }: Props) {
+export function BondPanel({ stages, status, fill, name }: Props) {
   const { stage, points, latestBook } = status;
   const bond = stages[stage];
   const next = nextBondOf(stage, points);
   const teaser = next ? stages[stage + 1]?.teaser : undefined;
   const percent = next ? Math.round(next.ratio * 100) : 100;
+  // 끝 단계는 읽기와 대화만으로는 닿지 않고, 날마다 찾아온 날이 쌓여야 닿는다.
+  const lastStep = !!next && stage + 1 === stages.length - 1;
 
   return (
     <section className="panel bondp" data-testid="bond-panel">
@@ -66,6 +71,12 @@ export function BondPanel({ stages, status, fill }: Props) {
           <span style={{ width: `${percent}%` }} />
         </div>
       </div>
+
+      {lastStep && (
+        <p className="bondp-daily" data-testid="bond-daily">
+          여기서부터는 날마다 얼굴을 비추는 게 제일 빨라요. 하루에 한 번 들르면 {josa(name, '이', '가')} 그만큼 더 가까이 다가와요.
+        </p>
+      )}
 
       {teaser && <p className="bondp-teaser">{teaser}</p>}
 

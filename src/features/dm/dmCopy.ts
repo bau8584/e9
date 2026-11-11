@@ -15,19 +15,28 @@ export const DM_COPY = {
   newTag: '새 메시지',
   newCta: '대화 열기',
   doneTag: '다시 보기',
+  // 호감 단계가 모자라 잠긴 대화(날짜 잠금과 다르다)
   lockedTag: '더 가까워지면 열려요',
+  lockedStage: (title: string) => `'${title}' 단계가 되면 열려요`,
+  // 오늘 열 수 있는 새 대화를 다 나눠서 내일 오는 대화
+  waitingTag: '다음 이야기는 내일 도착',
+  waitingHint: '오늘 나눌 대화는 다 나눴어요. 내일 다시 오면 이어져요.',
+  waitingLater: '이 이야기는 그다음에 와요',
   emptyList: '아직 준비 중인 대화예요.',
   allDone: '지금 열린 대화는 다 나눴어요. 더 가까워지면 새 대화가 열려요.',
   backToList: '대화 목록으로',
   replyLabel: '답장 고르기',
   skip: '바로 보기',
   replayDifferent: '다르게 답해 보기',
-  readRecommend: (title: string) => `'${title}' 읽으러 가기`,
+  readRecommend: (title: string) => `'${title}' 같이 읽기`,
+  /** 고른 답이 통한 만큼 */
+  gain: (n: number) => (n > 0 ? `마음 +${n}` : '마음 그대로'),
 
   // 보상
   rewardTitle: '받은 것',
   rewardAffinity: (n: number) => `호감 +${n}`,
   rewardPack: '카드 팩 1개',
+  rewardNoPack: '카드 팩은 내 말 3번부터',
   rewardTicket: '대화 시간 1회',
   rewardTicketFull: '대화 시간은 이미 가득 차 있어요',
 
@@ -43,6 +52,12 @@ export const DM_COPY = {
   send: '보내기',
   turnsLeft: (n: number) => `남은 말 ${n}번`,
   timeUsedNote: '첫 말을 보내고 답이 오면 대화 시간 1회를 써요.',
+  // 시작 전에 미리 알린다
+  beforeStart: (min: number) => `내 말을 ${min}번 이상 나누고 마치면 카드 팩을 받아요. 대화는 이 탭에만 남아서, 탭을 닫으면 사라져요.`,
+  // 내 말이 모자란데 마치려 할 때
+  finishShort: (sent: number, min: number) => `지금 마치면 카드 팩은 없어요. 내 말이 ${sent}번이에요(${min}번부터 팩).`,
+  finishAnyway: '그래도 마치기',
+  keepTalking: '더 이야기하기',
   timeOver: (name: string) => `${josa(name, '과', '와')}의 대화 시간이 끝났어요.`,
   noTicketError: '남은 대화 시간이 없어요.',
   placeholder: (name: string) => `${name}에게 직접 말해 보세요`,

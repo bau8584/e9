@@ -19,10 +19,15 @@ const fill = (text: string, nickname: string) => text.replaceAll('{name}', nickn
 export function ReadingPage() {
   const { progress } = useSnapshot();
   const openId = useOpenPassageId();
-  if (!progress.favoriteId) return null;
   const passage = openId ? getPassage(openId) : undefined;
   const book = passage ? getBook(passage.bookId) : undefined;
-  if (passage && book) return <PassageView key={passage.id} book={book} passage={passage} nickname={progress.nickname} />;
+  // 최애를 바꾸면 이전 인물의 대목은 닫고 서재부터 보여 준다.
+  const stale = Boolean(book && book.characterId !== progress.favoriteId);
+  useEffect(() => {
+    if (stale) closePassage();
+  }, [stale]);
+  if (!progress.favoriteId) return null;
+  if (passage && book && !stale) return <PassageView key={passage.id} book={book} passage={passage} nickname={progress.nickname} />;
   return <Library character={getCharacter(progress.favoriteId)} nickname={progress.nickname} />;
 }
 
@@ -180,6 +185,33 @@ interface Reward {
   ticket: boolean;
 }
 
+// 보상 안내는 시스템 문구가 아니라 인물이 건네는 말투로.
+interface RewardVoice {
+  head: string;
+  affinity: (n: number) => string;
+  pack: string;
+  ticket: string;
+  ticketFull: string;
+}
+const REWARD_VOICE: Record<string, RewardVoice> = {
+  nietzsche: {
+    head: '여기까지 같이 읽었군. 약속한 건 챙겨 줘야지.',
+    affinity: (n) => `…솔직히 네가 조금 마음에 든다 (호감 +${n})`,
+    pack: '카드 팩 하나를 네 몫으로 챙겨 뒀다. 지금 열어 봐라.',
+    ticket: '말 걸 시간도 한 번 늘려 놨다. 기다리고 있겠다.',
+    ticketFull: '말 걸 시간은 이미 가득이다. 아끼지 말고 와라.',
+  },
+  xunzi: {
+    head: '한 대목 끝까지 왔구나. 쌓은 건 쌓은 거다.',
+    affinity: (n) => `...네가 눈에 밟힌다. 인정은 아니고, 그냥 그렇다 (호감 +${n})`,
+    pack: '카드 팩 하나다. 받아 두고 바로 열어 봐라.',
+    ticket: '말 걸 시간도 한 번 더 열어 뒀다. 물을 게 있으면 와라.',
+    ticketFull: '말 걸 시간은 이미 가득 차 있다. 어서 와서 써라.',
+  },
+};
+const DEFAULT_REWARD_VOICE: RewardVoice = REWARD_VOICE.nietzsche;
+const rewardVoice = (id: string): RewardVoice => REWARD_VOICE[id] ?? DEFAULT_REWARD_VOICE;
+
 function Ending({
   book,
   passage,
@@ -270,15 +302,15 @@ function Ending({
 
           {reward && (
             <div className="rd-reward" role="status">
-              <p className="rd-reward-head">{character.nameWith} 한 대목을 같이 읽었어요</p>
+              <p className="rd-reward-head">{rewardVoice(book.characterId).head}</p>
               <ul className="rd-reward-list">
-                <li>{character.name}의 호감이 올랐어요 (+{reward.affinity})</li>
-                <li>카드 팩 1개를 받았어요</li>
-                <li>{reward.ticket ? '대화 시간 1회가 생겼어요' : '대화 시간은 이미 가득 모여 있어요'}</li>
+                <li>{rewardVoice(book.characterId).affinity(reward.affinity)}</li>
+                <li>{rewardVoice(book.characterId).pack}</li>
+                <li>{reward.ticket ? rewardVoice(book.characterId).ticket : rewardVoice(book.characterId).ticketFull}</li>
               </ul>
             </div>
           )}
-          <PackOpener characterId={book.characterId} />
+          <PackOpener characterId={book.characterId} autoOpen={Boolean(reward)} />
 
           <div className="rd-actions">
             <button type="button" className="btn btn-primary btn-block" onClick={talk}>

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getPassage } from '../../data/books';
+import { booksOf, getPassage } from '../../data/books';
 import type { Episode } from '../../data/fanTypes';
 import type { CharacterId } from '../../data/types';
-import { EPISODE_AFFINITY, completeEpisode, getFan } from '../../store/fan';
+import { EPISODE_AFFINITY, completeEpisode, getFan, useFan } from '../../store/fan';
 import { openPassage } from '../reading/nav';
 import { DM_COPY } from './dmCopy';
 import type { EpisodeSession, Reward } from './dmSession';
-import { pickedAffinity, pickedIds, walkEpisode } from './episodeFlow';
+import { isInnerLine, pickedAffinity, pickedIds, unreadRecommend, walkEpisode } from './episodeFlow';
 import type { RevealPhase } from './messageReveal';
 import { RewardNotice } from './RewardNotice';
 import { prefersReducedMotion, useMessageReveal } from './useMessageReveal';
@@ -33,6 +33,11 @@ export function EpisodeThread({ episode, session, characterId, nickname, onChang
   const endRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const focusAfterSkip = useRef(false);
+  const fan = useFan();
+  /** 이 화면에서 방금 고른 beat들. 그 답에만 "마음 +N"을 붙인다(다시 보기에는 안 붙는다). */
+  const [justPicked, setJustPicked] = useState<number[]>([]);
+  /** 이 화면에서 방금 끝내 보상을 받았다. 팩을 그 자리에서 연다. */
+  const [justFinished, setJustFinished] = useState(false);
 
   useEffect(() => onPhase(reveal.phase), [reveal.phase, onPhase]);
   useEffect(() => () => onPhase('idle'), [onPhase]);
@@ -50,8 +55,9 @@ export function EpisodeThread({ episode, session, characterId, nickname, onChang
       const before = getFan().chatTickets;
       const bonus = pickedAffinity(episode, session.picks);
       const first = completeEpisode(characterId, episode.id, pickedIds(episode, session.picks), bonus);
-      const reward: Reward = { first, affinity: EPISODE_AFFINITY + bonus, ticket: true, ticketFull: getFan().chatTickets === before };
+      const reward: Reward = { first, affinity: EPISODE_AFFINITY + bonus, ticket: true, ticketFull: getFan().chatTickets === before, pack: true };
       finished = reward;
+      if (first) setJustFinished(true);
     }
     onChange({ ...session, seen: view.items.length, finished });
   }, [reveal.done, view, seen, session, episode, characterId, onChange]);
@@ -68,16 +74,22 @@ export function EpisodeThread({ episode, session, characterId, nickname, onChang
   }, [reveal.done]);
 
   const choose = (choiceId: string) => {
+    setJustPicked((beats) => [...beats, view.askBeat]);
     onChange({ ...session, seen: view.items.length, picks: { ...session.picks, [view.askBeat]: choiceId } });
   };
 
   const replay = () => {
     completed.current = false;
+    setJustPicked([]);
+    setJustFinished(false);
     onChange({ id: episode.id, picks: {}, seen: 0, finished: null });
   };
 
   let themShown = 0;
-  const recommend = episode.recommend ? getPassage(episode.recommend) : undefined;
+  // 아직 안 읽은 대목만 권한다. 다 읽었으면 단추를 숨긴다.
+  const passageIds = useMemo(() => booksOf(characterId).flatMap((book) => book.passages.map((p) => p.id)), [characterId]);
+  const recommendId = unreadRecommend(episode.recommend, passageIds, fan.passages);
+  const recommend = recommendId ? getPassage(recommendId) : undefined;
   const ended = reveal.done && view.ended;
 
   return (
@@ -95,11 +107,23 @@ export function EpisodeThread({ episode, session, characterId, nickname, onChang
             themShown += 1;
             if (themShown > reveal.visibleCount) return null;
           }
-          const cls = `bubble ${item.who === 'me' ? 'bubble-me' : 'bubble-them'}${fresh && motion ? ' bubble-in' : ''}`;
-          return (
+          const inner = item.who === 'them' && isInnerLine(item.text);
+          const cls = `bubble ${item.who === 'me' ? 'bubble-me' : 'bubble-them'}${inner ? ' bubble-inner' : ''}${fresh && motion ? ' bubble-in' : ''}`;
+          const bubble = (
             <p key={index} className={cls}>
+              {inner && <span className="dm-sr">속마음: </span>}
               {item.text}
             </p>
+          );
+          if (!item.gain || !justPicked.includes(item.gain.beat)) return bubble;
+          const { affinity } = item.gain;
+          return (
+            <div key={index} className="dm-gain-row">
+              {bubble}
+              <span className={`dm-gain${affinity >= 3 ? ' is-big' : affinity === 0 ? ' is-flat' : ''}${motion ? ' is-pop' : ''}`}>
+                {DM_COPY.gain(affinity)}
+              </span>
+            </div>
           );
         })}
         {reveal.phase === 'typing' && (
@@ -134,7 +158,7 @@ export function EpisodeThread({ episode, session, characterId, nickname, onChang
         </div>
       ) : ended ? (
         <div ref={actionsRef} className="dm-episode-end dm-actions">
-          {session.finished?.first && <RewardNotice reward={session.finished} characterId={characterId} />}
+          {session.finished?.first && <RewardNotice reward={session.finished} characterId={characterId} fresh={justFinished} />}
           {recommend && (
             <button type="button" className="btn btn-primary btn-block" onClick={() => openPassage(recommend.id)}>
               {DM_COPY.readRecommend(recommend.title)}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { bonds } from '../data/bonds';
+import { bonds, greetingOf } from '../data/bonds';
 import { characters } from '../data';
 import { bondOf, latestBookTitle, markStageSeen, nextBondOf, readSeenStage } from './bond';
 import { AFFINITY_THRESHOLDS, stageOfAffinity } from './fan';
@@ -9,24 +9,46 @@ describe('호감도', () => {
   beforeEach(() => localStorage.clear());
 
   it('호감 점수가 기준에 닿아야 단계가 오른다', () => {
-    expect([0, 14, 15, 59, 60, 119, 120, 999].map(stageOfAffinity)).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
+    expect([0, 14, 15, 59, 60, 159, 160, 999].map(stageOfAffinity)).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
     expect(bondOf(15, 0)).toEqual({ earned: 1, stage: 1, points: 15 });
   });
 
   it('옛 방식으로 이미 오른 단계 아래로는 내려가지 않는다', () => {
     expect(bondOf(0, 2)).toEqual({ earned: 0, stage: 2, points: 0 });
-    expect(bondOf(130, 2).stage).toBe(3);
+    expect(bondOf(130, 2).stage).toBe(2);
+    expect(bondOf(170, 2).stage).toBe(3);
   });
 
   it('다음 단계까지 남은 점수와 비율을 알려 준다', () => {
     expect(nextBondOf(0, 0)).toEqual({ need: 15, remaining: 15, ratio: 0 });
     expect(nextBondOf(0, 12)).toEqual({ need: 15, remaining: 3, ratio: 0.8 });
     expect(nextBondOf(1, 15)).toEqual({ need: 60, remaining: 45, ratio: 0 });
-    expect(nextBondOf(2, 90)?.ratio).toBe(0.5);
+    expect(nextBondOf(2, 110)?.ratio).toBe(0.5);
     expect(nextBondOf(3, 500)).toBeNull();
     // 이미 본 단계가 점수보다 높아도 남은 점수와 비율이 말이 된다
     const legacy = nextBondOf(2, 0);
-    expect(legacy).toEqual({ need: 120, remaining: 120, ratio: 0 });
+    expect(legacy).toEqual({ need: 160, remaining: 160, ratio: 0 });
+  });
+
+  it('홈 인사는 처음 온 날 따로 있고, 단계마다 5개 이상을 날마다 바꿔 쓴다', () => {
+    for (const c of characters) {
+      const stages = bonds[c.id];
+      expect(stages[0].firstGreeting).toBeTruthy();
+      expect(greetingOf(stages[0], 1, '2026-11-10')).toBe(stages[0].firstGreeting);
+      stages.forEach((b) => {
+        expect(b.greetings.length).toBeGreaterThanOrEqual(5);
+        expect(greetingOf(b, 5, '2026-11-10')).not.toBe(greetingOf(b, 5, '2026-11-11'));
+      });
+    }
+    // 첫날 인사에 "또 왔나"가 나오지 않는다
+    expect(greetingOf(bonds.nietzsche[0], 0, '2026-11-10')).not.toContain('또 왔');
+  });
+
+  it('니체와 순자의 말투에 "그대", "~하게" 같은 옛 말투가 없다', () => {
+    for (const id of ['nietzsche', 'xunzi'] as const) {
+      const text = bonds[id].flatMap((b) => [...b.greetings, b.firstGreeting ?? '', ...b.moment]).join('\n');
+      expect(text).not.toMatch(/그대|하게\.|하세|하네/);
+    }
   });
 
   it('가장 최근에 등록한 책을 찾는다', () => {

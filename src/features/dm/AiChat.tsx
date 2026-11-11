@@ -2,7 +2,17 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { bonds } from '../../data/bonds';
 import { getBook, getPassage } from '../../data/books';
 import type { CharacterId } from '../../data/types';
-import { CHAT_AFFINITY, CHAT_TURNS_BY_STAGE, TICKET_CAP, finishFreeChat, getFan, setTalkTopic, startFreeChat, useFan } from '../../store/fan';
+import {
+  CHAT_AFFINITY,
+  CHAT_MIN_TURNS,
+  CHAT_TURNS_BY_STAGE,
+  TICKET_CAP,
+  finishFreeChat,
+  getFan,
+  setTalkTopic,
+  startFreeChat,
+  useFan,
+} from '../../store/fan';
 import { goTo } from '../../store/store';
 import { DM_COPY, MEMORY_CHARS, MEMORY_LINES } from './dmCopy';
 import { readChatSession, writeChatSession, type ChatTurn, type FreeChatSession } from './dmSession';
@@ -42,6 +52,10 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  /** 내 말이 모자란데 마치기를 눌렀다: 팩이 없다는 걸 먼저 알린다 */
+  const [confirmShort, setConfirmShort] = useState(false);
+  /** 이 화면에서 방금 마쳐 보상을 받았다: 팩을 그 자리에서 연다 */
+  const [justFinished, setJustFinished] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const setSession = (next: FreeChatSession | null) => {
@@ -68,6 +82,8 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
     const opener = bonds[characterId]?.[stage]?.opener;
     if (!intro.length && opener) intro.push(fillName(opener, nickname));
     setError('');
+    setJustFinished(false);
+    setConfirmShort(false);
     setSession({ started: false, intro, topicId: topic ? topic.passage.id : null, turns: [], finished: null });
   };
 
@@ -87,13 +103,27 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
   };
 
   const finish = (current: FreeChatSession) => {
+    setConfirmShort(false);
     if (!current.started) {
       setSession(null);
       return;
     }
     const first = current.turns.find((t) => t.role === 'user')?.content ?? '';
-    finishFreeChat(characterId, first.trim().slice(0, MEMORY_CHARS));
-    setSession({ ...current, finished: { first: true, affinity: CHAT_AFFINITY, ticket: false, ticketFull: false } });
+    const turns = current.turns.filter((t) => t.role === 'user').length;
+    finishFreeChat(characterId, first.trim().slice(0, MEMORY_CHARS), turns);
+    // 보상 계산은 finishFreeChat과 같게: 3번 미만이면 팩 없이 호감만 조금.
+    const enough = turns >= CHAT_MIN_TURNS;
+    setJustFinished(true);
+    setSession({
+      ...current,
+      finished: { first: true, affinity: enough ? CHAT_AFFINITY : Math.min(2, turns), ticket: false, ticketFull: false, pack: enough },
+    });
+  };
+
+  /** 마치기 단추: 시작했는데 내 말이 모자라면 팩이 없다는 걸 먼저 알린다. */
+  const askFinish = (current: FreeChatSession) => {
+    if (current.started && sent < CHAT_MIN_TURNS && !confirmShort) setConfirmShort(true);
+    else finish(current);
   };
 
   const submit = async (event: FormEvent) => {
@@ -104,6 +134,7 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
       setError(DM_COPY.noTicketError);
       return;
     }
+    setConfirmShort(false);
     const before = session;
     const history: ChatTurn[] = [...session.turns, { role: 'user', content }];
     setSession({ ...session, turns: history });
@@ -158,7 +189,7 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
     <section className={first ? 'dm-time is-first' : 'dm-time'} aria-label={DM_COPY.timeTitle}>
       <div className="dm-time-head">
         <h2 className="section-title">{DM_COPY.timeTitle}</h2>
-        <span className="dm-time-pips" aria-label={`남은 대화 시간 ${fan.chatTickets}`}>
+        <span className="dm-time-pips" role="img" aria-label={`남은 대화 시간 ${fan.chatTickets}`}>
           {Array.from({ length: TICKET_CAP }, (_, i) => (
             <span key={i} className={i < fan.chatTickets ? 'is-on' : ''} />
           ))}
@@ -176,6 +207,7 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
           {fan.chatTickets > 0 ? (
             <>
               <p className="dm-time-line">{DM_COPY.timeReady(name, fan.chatTickets)}</p>
+              <p className="dm-time-note">{DM_COPY.beforeStart(CHAT_MIN_TURNS)}</p>
               <button type="button" className="btn btn-primary btn-block" onClick={open}>
                 {DM_COPY.start}
               </button>
@@ -233,7 +265,7 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
           {session.finished ? (
             <div className="dm-time-end">
               <p className="dm-time-line">{DM_COPY.timeOver(name)}</p>
-              <RewardNotice reward={session.finished} characterId={characterId} />
+              <RewardNotice reward={session.finished} characterId={characterId} fresh={justFinished} />
               <button type="button" className="btn btn-reply btn-block" onClick={() => setSession(null)}>
                 {DM_COPY.close}
               </button>
@@ -254,12 +286,26 @@ export function AiChat({ characterId, name, nickname, stage, onOpenEpisode, onTy
                   {DM_COPY.send}
                 </button>
               </form>
-              <div className="ai-chat-foot">
-                <span>{session.started ? DM_COPY.turnsLeft(left) : DM_COPY.timeUsedNote}</span>
-                <button type="button" className="ai-chat-finish" disabled={sending} onClick={() => finish(session)}>
-                  {DM_COPY.finish}
-                </button>
-              </div>
+              {confirmShort ? (
+                <div className="ai-chat-confirm" role="alert">
+                  <p>{DM_COPY.finishShort(sent, CHAT_MIN_TURNS)}</p>
+                  <div className="dm-time-go">
+                    <button type="button" className="btn btn-reply" onClick={() => setConfirmShort(false)}>
+                      {DM_COPY.keepTalking}
+                    </button>
+                    <button type="button" className="btn btn-reply" disabled={sending} onClick={() => finish(session)}>
+                      {DM_COPY.finishAnyway}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="ai-chat-foot">
+                  <span>{session.started ? DM_COPY.turnsLeft(left) : DM_COPY.timeUsedNote}</span>
+                  <button type="button" className="ai-chat-finish" disabled={sending} onClick={() => askFinish(session)}>
+                    {DM_COPY.finish}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </>

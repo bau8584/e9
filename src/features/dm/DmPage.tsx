@@ -8,7 +8,7 @@ import { episodesOf, getEpisode } from '../../data/episodes';
 import type { Episode } from '../../data/fanTypes';
 import { useBond } from '../../store/bond';
 import { getBook, getPassage } from '../../data/books';
-import { getFan, useFan } from '../../store/fan';
+import { episodeSlotsLeft, getFan, useFan } from '../../store/fan';
 import { markDmRead, useSnapshot } from '../../store/store';
 import { AI_CHARACTERS, AiChat, aiChatAvailable } from './AiChat';
 import { readEpisodeSession, writeEpisodeSession, type EpisodeSession } from './dmSession';
@@ -19,7 +19,8 @@ import type { RevealPhase } from './messageReveal';
 import './dm.css';
 
 // DM = 최애와의 메신저 대화방. 입덕 직후부터 언제나 열린다.
-// 선택 대화(횟수 제한 없음) 목록과 진행, 그리고 벌어서 쓰는 "대화 시간"(자유대화)이 한 화면에 이어진다.
+// 선택 대화 목록과 진행, 그리고 벌어서 쓰는 "대화 시간"(자유대화)이 한 화면에 이어진다.
+// 새 선택 대화는 하루에 열 수 있는 편 수가 정해져 있다(episodeSlotsLeft). 끝낸 편은 언제든 다시 본다.
 export function DmPage() {
   const { progress } = useSnapshot();
   // 메뉴의 새 메시지 점을 지운다.
@@ -42,15 +43,22 @@ function DmRoom() {
   const fan = useFan();
   const stage = useBond().stage;
   const list = episodesOf(character.id);
-  const statuses = episodeStatuses(list, fan.episodes, stage);
+  const statuses = episodeStatuses(list, fan.episodes, stage, episodeSlotsLeft(character.id, fan));
   const chatOn = aiChatAvailable() && AI_CHARACTERS.includes(character.id);
+  /** 지금 열 수 있는 대화인가(끝낸 편, 오늘 열린 편) */
+  const canOpen = (target: Episode) => {
+    const status = statuses[list.findIndex((e) => e.id === target.id)];
+    return status === 'new' || status === 'open' || status === 'done';
+  };
 
   const [session, setSessionState] = useState<EpisodeSession | null>(() => {
     // 읽기에서 대목 화제를 들고 왔으면 대화 시간이 먼저 보이게 목록부터 연다.
     const topic = getFan().talkTopic ? getPassage(getFan().talkTopic!) : undefined;
     if (topic && getBook(topic.bookId)?.characterId === character.id) return null;
     const saved = readEpisodeSession(character.id);
-    return saved && getEpisode(saved.id)?.characterId === character.id ? saved : null;
+    const target = saved ? getEpisode(saved.id) : undefined;
+    // 이어 보던 대화라도 끝내지 않았고 오늘 열 수 없게 되었으면(날짜, 단계) 목록부터.
+    return saved && target?.characterId === character.id && (saved.finished || canOpen(target)) ? saved : null;
   });
   const episode = session ? getEpisode(session.id) : undefined;
   const [episodePhase, setEpisodePhase] = useState<RevealPhase>('idle');
@@ -69,6 +77,7 @@ function DmRoom() {
   const toTop = () => talkRef.current?.scrollIntoView?.({ block: 'start' });
 
   const openEpisode = (target: Episode) => {
+    if (!canOpen(target)) return;
     const record = fan.episodes[target.id];
     if (!record) {
       setSession({ id: target.id, picks: {}, seen: 0, finished: null });
@@ -132,7 +141,13 @@ function DmRoom() {
         )}
         <div className="dm-rest" hidden={Boolean(episode)}>
           <div ref={listRef} className="dm-list-wrap">
-            <EpisodeList episodes={list} statuses={statuses} onOpen={openEpisode} />
+            <EpisodeList
+              episodes={list}
+              statuses={statuses}
+              nickname={nickname}
+              stageTitle={(s) => bonds[character.id][s]?.title ?? ''}
+              onOpen={openEpisode}
+            />
           </div>
           {chatOn && (
             <AiChat

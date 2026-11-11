@@ -7,6 +7,8 @@ export interface Reward {
   affinity: number;
   ticket: boolean;
   ticketFull: boolean;
+  /** 카드 팩을 받았나. 없으면(예전 기록) 받은 것으로 본다. */
+  pack?: boolean;
 }
 
 export interface EpisodeSession {

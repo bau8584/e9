@@ -11,7 +11,7 @@ export function LandingPage() {
       <header className="landing-head">
         <p className="brand">힙독 HIP讀</p>
         <h1 className="landing-title">오늘 당신에게 시비 걸 고전을 고르세요.</h1>
-        <p className="landing-sub">최애를 정하고, DM을 받고, 원문을 읽어 문장 카드를 모으는 고전 팬덤.</p>
+        <p className="landing-sub">최애를 정하고, 매일 만나 가까워지며, 카드 팩을 열어 그의 문장을 모으는 고전 팬덤.</p>
       </header>
       <ul className="landing-grid">
         {characters.filter((c) => PLAYABLE_IDS.includes(c.id)).map((c) => (

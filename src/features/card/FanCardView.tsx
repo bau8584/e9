@@ -1,5 +1,5 @@
 // 인물 그림 카드 한 장. 누르면 뒤집혀 뒷면의 한 줄(제작진 각색)이 보인다.
-// 그림은 인물 초상 하나를 같이 쓰고, tone(0~3)으로 틀과 배경 색감을 나눈다. 한정 카드는 호감 단계 초상을 쓴다.
+// 그림은 인물 초상 하나를 같이 쓰고, tone(0~3)으로 배경 색감을, 등급으로 틀, 배경 무늬, 색조, 초상 확대를 나눈다. 한정 카드는 호감 단계 초상을 쓴다.
 import { useState } from 'react';
 import { Portrait } from '../../components/Portrait';
 import { getCharacter } from '../../data';
@@ -15,7 +15,15 @@ const limitedStage = (card: FanCard): number => {
   return match ? Number(match[1]) : 0;
 };
 
-const toneOf = (tone: number) => (Number.isInteger(tone) && tone >= 0 && tone <= 3 ? tone : 0);
+/** 아직 없는 카드에 보이는 기대 문구(등급별) */
+const LOCKED_TEASE: Record<FanRarity, string> = {
+  일반: '아직 만나지 못한 장면',
+  희귀: '아직 들키지 않은 속마음',
+  초희귀: '너한테만 보여 줄 얼굴',
+  한정: '더 가까워지면 받는 장면',
+};
+
+const toneOf =(tone: number) => (Number.isInteger(tone) && tone >= 0 && tone <= 3 ? tone : 0);
 
 export function RarityBadge({ rarity }: { rarity: FanRarity }) {
   const pips = RARITY_PIPS[rarity];
@@ -29,7 +37,7 @@ export function RarityBadge({ rarity }: { rarity: FanRarity }) {
 
 interface Props {
   card: FanCard;
-  /** 아직 없는 카드. 실루엣과 ??? 로 보인다. */
+  /** 아직 없는 카드. 실루엣과 등급별 기대 문구로 보인다. */
   locked?: boolean;
   /** 가진 장수. 2 이상이면 표시한다. */
   count?: number;
@@ -49,11 +57,13 @@ export function FanCardView({ card, locked = false, count = 0 }: Props) {
       </span>
       <span className="fc-art">
         <Portrait character={character} stage={limitedStage(card)} className="fc-portrait" />
+        <span className="fc-tint" aria-hidden="true" />
         {!locked && (card.rarity === '초희귀' || card.rarity === '한정') && <span className="fc-foil" aria-hidden="true" />}
+        {locked && <span className="fc-mystery" aria-hidden="true">?</span>}
       </span>
       <span className="fc-plate">
-        <strong className="fc-title">{locked ? '???' : card.title}</strong>
-        <small className="fc-scene">{locked ? (card.rarity === '한정' ? '더 가까워지면 받는 장면' : '아직 만나지 못한 장면') : card.scene}</small>
+        <strong className="fc-title">{locked ? LOCKED_TEASE[card.rarity] : card.title}</strong>
+        <small className="fc-scene">{card.scene}</small>
       </span>
       {!locked && count >= 2 && <span className="fc-count" aria-label={`${count}장`}>x{count}</span>}
     </span>

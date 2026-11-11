@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Episode } from '../../data/fanTypes';
-import { episodeStatuses, pickedAffinity, pickedIds, picksFromIds, walkEpisode } from './episodeFlow';
+import { episodeStatuses, isInnerLine, pickedAffinity, pickedIds, picksFromIds, unreadRecommend, walkEpisode } from './episodeFlow';
 
 const episode: Episode = {
   id: 'nietzsche-ep1',
@@ -46,5 +46,32 @@ describe('선택 대화 펼치기', () => {
   it('안 끝낸 열린 대화 중 첫 번째가 새 메시지, 단계가 모자라면 잠긴다', () => {
     const list = [episode, { ...episode, id: 'x2' }, { ...episode, id: 'x3', minStage: 2 }, { ...episode, id: 'x4' }];
     expect(episodeStatuses(list, { 'nietzsche-ep1': ['a'] }, 1)).toEqual(['done', 'new', 'locked', 'open']);
+  });
+
+  it('오늘 열 수 있는 편을 넘는 안 끝낸 대화는 내일 도착, 단계 잠금과 따로 셈한다', () => {
+    const list = [episode, { ...episode, id: 'x2' }, { ...episode, id: 'x3', minStage: 2 }, { ...episode, id: 'x4' }];
+    expect(episodeStatuses(list, { 'nietzsche-ep1': ['a'] }, 1, 0)).toEqual(['done', 'waiting', 'locked', 'waiting']);
+    expect(episodeStatuses(list, {}, 1, 1)).toEqual(['new', 'waiting', 'locked', 'waiting']);
+    expect(episodeStatuses(list, {}, 1, 2)).toEqual(['new', 'open', 'locked', 'waiting']);
+  });
+
+  it('고른 답에 대한 반응의 마지막 말풍선에 마음 수치가 붙는다', () => {
+    const view = walkEpisode(episode, { 1: 'b' }, '덕구');
+    const gains = view.items.filter((i) => i.gain).map((i) => [i.text, i.gain?.affinity, i.gain?.beat]);
+    expect(gains).toEqual([['들어라.', 1, 1]]);
+  });
+
+  it('권하는 대목은 안 읽은 것만, 다 읽었으면 없다', () => {
+    const ids = ['t-1', 't-2', 't-3'];
+    expect(unreadRecommend('t-2', ids, {})).toBe('t-2');
+    expect(unreadRecommend('t-2', ids, { 't-2': 'a' })).toBe('t-1');
+    expect(unreadRecommend('t-1', ids, { 't-1': 'a', 't-2': 'b' })).toBe('t-3');
+    expect(unreadRecommend('t-1', ids, { 't-1': 'a', 't-2': 'b', 't-3': 'c' })).toBeNull();
+    expect(unreadRecommend(undefined, ids, {})).toBe('t-1');
+  });
+
+  it('괄호로 감싼 말은 속마음이다', () => {
+    expect(isInnerLine('(말 안 한다.)')).toBe(true);
+    expect(isInnerLine('(헛기침) 좋다.')).toBe(false);
   });
 });

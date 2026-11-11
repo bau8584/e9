@@ -12,3 +12,6 @@
 .ai-chat-foot span { min-width: 0; word-break: keep-all; }
 .ai-chat-finish { flex: none; min-height: 44px; padding: 0 4px; font: inherit; font-size: .85rem; font-weight: 700; color: var(--purple); background: none; border: 0; text-decoration: underline; cursor: pointer; }
 .ai-chat-finish:disabled { opacity: .5; cursor: default; }
+.ai-chat-confirm { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; background: #fff7e6; border: 1px solid var(--gold-soft); border-radius: 10px; }
+.ai-chat-confirm p { margin: 0; font-size: .88rem; line-height: 1.5; word-break: keep-all; }
+.dm-time-note { margin: 0; font-size: .8rem; line-height: 1.5; color: var(--muted); word-break: keep-all; }

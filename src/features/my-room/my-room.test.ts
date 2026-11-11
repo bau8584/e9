@@ -1,4 +1,4 @@
-// 내 방의 카드 구역(팩, 앨범, 옛 카드), 초기화, 이름 안내 시험. 화면을 실제로 그려 눌러 본다.
+// 내 방(최애 구역, 카드 구역, 이름 바꾸기, 초기화) 시험. 화면을 실제로 그려 눌러 본다.
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -66,7 +66,7 @@ describe('내 카드 구역(팩과 앨범)', () => {
     click('눌러서 열기');
     expect(fan.getFan().packs).toBe(0);
     expect(host.querySelectorAll('.po-revealed')).toHaveLength(0);
-    for (let i = 0; i < 3; i += 1) act(() => { vi.advanceTimersByTime(2000); });
+    for (let i = 0; i < 6; i += 1) act(() => { vi.advanceTimersByTime(2500); }); // 봉투 찢기 + 카드 3장 공개
     expect(host.querySelectorAll('.po-revealed')).toHaveLength(3);
     expect(text()).toMatch(/NEW/);
     const owned = Object.values(fan.getFan().cards).reduce((a, b) => a + b, 0);
@@ -112,7 +112,7 @@ describe('초기화', () => {
     show();
     click('카드와 입덕 기록 초기화');
     expect(store.getProgress().cards).toHaveLength(1);
-    expect(host.querySelector('dialog')!.textContent).toContain('그대로 남는 것');
+    expect(host.querySelector('dialog')!.textContent).toContain('지워지는 것');
     expect(document.activeElement?.textContent).toBe('취소');
     click('취소');
     expect(host.querySelector('dialog')).toBeNull();
@@ -135,55 +135,63 @@ describe('초기화', () => {
   });
 });
 
-describe('홈과 서고 이름이 다를 때', () => {
+describe('이름 바꾸기', () => {
   it('입덕 전(빈 이름)이나 같은 이름은 다르다고 하지 않는다', () => {
     expect(namesDiffer('', '문장수집가')).toBe(false);
     expect(namesDiffer('덕구', '덕구')).toBe(false);
     expect(namesDiffer('덕구', '서고이름')).toBe(true);
   });
-  it('보는 것만으로는 저장값을 안 바꾸고 안내만 띄운다', () => {
+  it('이름 칸은 입덕 글자 수 제한과 같고, 저장하면 홈 이름이 바뀌며 책 기록은 안 건드린다', () => {
     const saved = library('서고이름');
     localStorage.setItem(LIBRARY_KEY, saved);
     store.completeOnboarding('덕구', 'nietzsche');
     show();
-    expect(host.querySelector('.name-notice')!.textContent).toContain('서고이름');
+    click('바꾸기');
+    const input = host.querySelector('#nickname') as HTMLInputElement;
+    expect(input.maxLength).toBe(20);
+    expect(input.value).toBe('덕구');
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '새이름');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    click('저장하기');
+    expect(store.getProgress().nickname).toBe('새이름');
+    expect(host.textContent).toContain('닉네임 새이름');
     expect(localStorage.getItem(LIBRARY_KEY)).toBe(saved);
-    expect(store.getProgress().nickname).toBe('덕구');
-  });
-  it('고른 이름으로 양쪽을 맞추면 안내가 사라지고 책 기록은 남는다', () => {
-    localStorage.setItem(LIBRARY_KEY, library('서고이름'));
-    store.completeOnboarding('덕구', 'nietzsche');
-    show();
-    click('서고이름(으)로 통일');
-    expect(store.getProgress().nickname).toBe('서고이름');
-    expect(host.querySelector('.name-notice')).toBeNull();
-    expect(JSON.parse(localStorage.getItem(LIBRARY_KEY)!).books).toHaveLength(1);
-  });
-  it('이름 칸은 입덕 글자 수 제한과 같아 두 이름이 잘려서 달라지지 않는다', () => {
-    store.completeOnboarding('덕구', 'nietzsche');
-    show();
-    act(() => { (host.querySelector('.top-user') as HTMLElement).click(); });
-    expect((host.querySelector('#nickname') as HTMLInputElement).maxLength).toBe(20);
   });
 });
 
-describe('키보드 이동', () => {
-  const press = (init: KeyboardEventInit) => {
-    const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init });
-    act(() => { (host.querySelector('.map') ?? document.body).dispatchEvent(event); });
-    return event;
-  };
-  it('방향키와 WASD로 아바타가 움직인다', () => {
+describe('내 방 구성', () => {
+  it('최애 구역에 단계 이름, 함께한 날, 읽은 이야기와 나눈 대화, 기억 한 줄이 나온다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    act(() => { fan.checkIn('nietzsche'); });
+    act(() => { fan.finishFreeChat('nietzsche', '덕구는 밤에 읽는다', 5); });
     show();
-    const where = () => (host.querySelector('.player') as HTMLElement).style.left;
-    const start = where();
-    press({ key: 'a' });
-    expect(where()).not.toBe(start);
+    const fav = host.querySelector('.mr-fav')!;
+    expect(fav.textContent).toContain('니체');
+    expect(fav.textContent).toContain('함께한 지 1일째');
+    expect(fav.textContent).toContain('읽은 이야기');
+    expect(fav.textContent).toContain('나눈 대화');
+    expect(fav.textContent).toContain('덕구는 밤에 읽는다');
+    expect(fav.querySelector('[role=progressbar]')).not.toBeNull();
   });
-  it('Ctrl+S 같은 브라우저 단축키는 가로채지 않는다', () => {
+  it('서고 화면(방, 책 등록, 검색, 백업)과 영어 장식 문구가 없다', () => {
+    localStorage.setItem(LIBRARY_KEY, library('덕구'));
+    store.completeOnboarding('덕구', 'nietzsche');
     show();
-    const where = (host.querySelector('.player') as HTMLElement).style.top;
-    expect(press({ key: 's', ctrlKey: true }).defaultPrevented).toBe(false);
-    expect((host.querySelector('.player') as HTMLElement).style.top).toBe(where);
+    expect(host.querySelector('.map, .player, .shelf-tabs, .search-box, .import-panel')).toBeNull();
+    expect(host.textContent).not.toMatch(/MY CARD ALBUM|A ROOM OF YOUR OWN|PERSONAL LIBRARY/);
+    expect(host.textContent).not.toMatch(/책 등록|기록 백업|책사이|이름이 두 개/);
+  });
+  it('예전 책 기록이 있을 때만 보관 중이라는 한 줄이 나온다', () => {
+    store.completeOnboarding('덕구', 'nietzsche');
+    show();
+    expect(host.textContent).not.toContain('예전 독서 기록');
+    act(() => { root.unmount(); });
+    root = createRoot(host);
+    localStorage.setItem(LIBRARY_KEY, library('덕구'));
+    show();
+    expect(host.textContent).toContain('예전 독서 기록 1권은 그대로 보관 중이에요');
+    expect(host.textContent).toContain('기록은 이 기기에만 저장돼요');
   });
 });

@@ -34,6 +34,7 @@ export function DiscoveryDialog({ onClose, initial }: {onClose: () => void; init
   const shown = tab==='types' ? readingTypes.find(t=>t.code===selectedCode) : result;
   const chatId = shown ? chatFor(shown.code) : 'nietzsche';
   const chatName = chatId==='xunzi'?'순자':'니체';
+  const playable = shown ? shown.philosopher===chatName : true;
   async function share() {
     if (!shown) return;
     const text=`나의 독서 유형은 ${shown.name}! 취향 철학자는 ${shown.philosopher}, 대화 추천은 ${chatName}. HIP讀에서 나의 독서 취향을 찾아봐요.`;
@@ -48,9 +49,10 @@ export function DiscoveryDialog({ onClose, initial }: {onClose: () => void; init
       <h2 id="taste-title" ref={title} tabIndex={-1}>{shown.name}</h2>
       <div className="taste-tags">{typeLabels(shown.code).map(l=><span key={l}>{l}</span>)}</div>
       <p className="taste-description">{shown.description}</p>
-      <div className="taste-philosopher"><span>취향으로 만나는 철학자</span><h3>{shown.philosopher}</h3><p>{shown.topic}</p></div>
+      {playable && <div className="taste-philosopher"><span>취향으로 만나는 철학자</span><h3>{shown.philosopher}</h3><p>{shown.topic}</p></div>}
       <div className="taste-connection"><strong>오늘 대화할 상대는 {chatName}</strong><p>{shown.contrast?`${shown.philosopher}와 다른 관점을 가진 순자에게 직접 물어보세요.`:shown.philosopher===chatName?'나의 관심사로 첫 대화를 시작해보세요.':`${shown.philosopher}에게서 발견한 질문을 ${chatName}의 관점으로 이어가요. 두 사람의 생각은 다를 수 있어요.`}</p><blockquote>{shown.prompt}</blockquote></div>
-      <button className="taste-primary" onClick={()=>meet(chatId)}>{chatName} 선택하고 시작하기 <ArrowRight size={18}/></button>
+      <button className="taste-primary" onClick={()=>meet(chatId)}>{chatName} 입덕하러 가기 <ArrowRight size={18}/></button>
+      {!playable && <p className="taste-soon" style={{margin:'10px 0',fontSize:'.85rem',opacity:.75}}>취향이 닿은 철학자 {shown.philosopher}도 곧 만나요.</p>}
       <button className="taste-other" onClick={()=>meet(chatId==='xunzi'?'nietzsche':'xunzi')}>{chatId==='xunzi'?'니체':'순자'}와 이야기해볼래요</button>
       <div className="taste-result-actions"><button onClick={share}><Copy size={15}/>결과 문구 복사</button><button onClick={restart}><RotateCcw size={15}/>다시 해보기</button>{tab==='types'&&<button onClick={()=>setSelectedCode(null)}>목록으로</button>}</div>
       <p role="status">{notice}</p>

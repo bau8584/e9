@@ -1,11 +1,9 @@
-// 내 방의 카드 구역: 카드 팩 열기(지금 최애) + 카드 앨범 + 초기화 버튼. 입덕 쪽 기록은 myRoomData 와 카드 조각으로만 읽는다.
-// 팩과 앨범은 입덕 쪽 조각이라 스스로 .fandom-scope 로 감싼다.
-import { RotateCcw } from 'lucide-react';
+// 내 방의 카드 구역: 카드 팩 열기(지금 최애) + 카드 앨범. 입덕 쪽 기록은 myRoomData 와 카드 조각으로만 읽는다.
+// 팩과 앨범은 입덕 쪽 조각이라 .fandom-scope 로 감싼다. (CardSummary, copyText 는 지금 화면에 쓰지 않는다.)
 import { Album } from '../card/Album';
 import { PackOpener } from '../card/PackOpener';
 import { goTo, useSnapshot } from '../../store/store';
 import { useMyRoomData } from './myRoomData';
-import type { Library } from './useLibrary';
 
 /** 클립보드에 복사한다. 외부로 보내지 않는다. 파일로 열어 clipboard 를 못 쓰면 옛 방식으로 시도한다. */
 export async function copyText(text: string): Promise<boolean> {
@@ -53,29 +51,23 @@ export function CardSummary() {
   );
 }
 
-export function MyCards({ lib }: { lib: Library }) {
-  const { favorite, fanCards, packs } = useMyRoomData();
+export function MyCards() {
+  const { fanCards, fanTotal, packs } = useMyRoomData();
   const favoriteId = useSnapshot().progress.favoriteId;
   return (
     <section id="my-cards" className="my-cards" aria-labelledby="my-cards-title">
       <div className="my-cards-head">
-        <div>
-          <span className="eyebrow">MY CARD ALBUM</span>
-          <h2 id="my-cards-title">내 카드<span>{fanCards}</span></h2>
-        </div>
-        {favorite && <div className="my-cards-stats"><span className="fan-tag">{favorite.name} 팬</span></div>}
+        <h2 id="my-cards-title">내 카드<span>{fanCards} / {fanTotal}장</span></h2>
       </div>
-      {favoriteId && <div className="my-cards-pack"><PackOpener characterId={favoriteId} /></div>}
-      {fanCards === 0 && packs === 0 && (
-        <div className="my-cards-empty">
-          <p>아직 카드가 없어요. 대목을 읽거나 대화를 마치면 카드 팩을 하나씩 받아요.</p>
-          <button className="primary" onClick={() => goTo('reading')}>읽으러 가기</button>
-        </div>
-      )}
-      <div className="my-cards-album"><Album /></div>
-      <div className="my-cards-foot">
-        <p>초기화해도 서고의 책 기록은 지워지지 않아요.</p>
-        <button className="text-btn" onClick={() => lib.setPopup('reset')}><RotateCcw size={14} />카드와 입덕 기록 초기화</button>
+      <div className="fandom-scope">
+        {favoriteId && <div className="my-cards-pack"><PackOpener characterId={favoriteId} /></div>}
+        {fanCards === 0 && packs === 0 && (
+          <div className="my-cards-empty">
+            <p>아직 카드가 없어요. 대목을 읽거나 대화를 마치면 카드 팩을 하나씩 받아요.</p>
+            <button className="primary" onClick={() => goTo('reading')}>읽으러 가기</button>
+          </div>
+        )}
+        <div className="my-cards-album"><Album /></div>
       </div>
     </section>
   );
